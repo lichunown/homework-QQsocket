@@ -4,17 +4,14 @@
 #include <stdio.h>
 #include <sqlite3.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include "encode.c"
+
 #define DATABASENAME "data.sqlite3"
 
-static int callback(void *NotUsed, int argc, char **argv, char **azColName){
-   int i;
-   for(i=0; i<argc; i++){
-      printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
-   }
-   printf("\n");
-   return 0;
-}
+
 
 int Sqlite3_open(char* name,sqlite3** db){
 	int r = sqlite3_open(name, db);
@@ -30,7 +27,7 @@ sqlite3* createDatabase(sqlite3* db){
          "password  char(50)  NOT NULL," \
          "nickname  char(16));";
 	char* zErrMsg;
-	int rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+	int rc = sqlite3_exec(db, sql, NULL, NULL, &zErrMsg);
 	if( rc != SQLITE_OK ){
 		printf("SQL error: %s\n", zErrMsg);
 		sqlite3_free(zErrMsg);
@@ -56,7 +53,7 @@ int sql_createUser(sqlite3* db,char* username,char* password,char* nickname){
 	char* zErrMsg;
 	sprintf(sql,"INSERT INTO user(username,password,nickname)"\
 				" VALUES ('%s','%s','%s');",username,password,nickname);
-	puts(sql);
+	//puts(sql);
 	int rc = sqlite3_exec(db, sql, NULL, NULL, &zErrMsg);
 	if( rc != SQLITE_OK ){
 		printf("SQL error: %s\n", zErrMsg);
@@ -67,4 +64,33 @@ int sql_createUser(sqlite3* db,char* username,char* password,char* nickname){
 		return 1;
 	}
 }
+
+int sql_login(sqlite3* db,char* username,char* password,char** gettingnick){
+	int result = 0;
+	char sql[1024];
+	password = encodePassword(password);// TODO :may need to delete this point
+	sprintf(sql,"select nickname from user"\
+				" where username='%s' and password='%s';",username,password);
+	char** azResult;
+	int nrow,ncolumn;
+	char* zErrMsg;
+	int rc = sqlite3_get_table(db,sql,&azResult,
+								&nrow,&ncolumn,&zErrMsg); 
+	printf("row: %d    col: %d\n",nrow,ncolumn);
+
+	if( rc != SQLITE_OK ){
+		printf("sql_login: SQL error: %s\n", zErrMsg);
+	}else{
+		if(nrow != 0){
+			char* nickname = (char*)malloc(16);
+			strcpy(nickname,azResult[1]);	
+			*gettingnick = nickname;
+			result = 1;			
+		}
+	}	
+	sqlite3_free(zErrMsg);
+	sqlite3_free_table(azResult);	
+	return result;
+}
+
 #endif
