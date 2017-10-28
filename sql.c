@@ -32,7 +32,7 @@ sqlite3* createDatabase(sqlite3* db){
 	char* zErrMsg;
 	int rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
 	if( rc != SQLITE_OK ){
-	printf("SQL error: %s\n", zErrMsg);
+		printf("SQL error: %s\n", zErrMsg);
 		sqlite3_free(zErrMsg);
 	}else{
 	 	printf("Table created successfully\n");
@@ -49,5 +49,22 @@ sqlite3* databaseInit(){
 		createDatabase(db);
 	}
 	return db;
+}
+
+int sql_createUser(sqlite3* db,char* username,char* password,char* nickname){
+	char sql[1024];
+	char* zErrMsg;
+	sprintf(sql,"INSERT INTO user(username,password,nickname)"\
+				" VALUES ('%s','%s','%s');",username,password,nickname);
+	puts(sql);
+	int rc = sqlite3_exec(db, sql, NULL, NULL, &zErrMsg);
+	if( rc != SQLITE_OK ){
+		printf("SQL error: %s\n", zErrMsg);
+		sqlite3_free(zErrMsg);
+		return 0;
+	}else{
+		printf("Records created successfully\n");
+		return 1;
+	}
 }
 #endif
