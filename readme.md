@@ -40,7 +40,10 @@ make test
 ./sql_test createuser [username] [password] [nickname]
 # login 
 ./sql_test login [username] [password] 
-
+# changenickname
+./sql_test changenickname [username] [newnickname] 
+# show all sql data
+./sql_test all
 ```
 # document
 
@@ -52,5 +55,12 @@ sqlite3* databaseInit();
 int sql_createUser(sqlite3* db,char* username,char* password,char* nickname);
 int sql_login(sqlite3* db,char* username,char* password,char** gettingnick);
 int sql_changeNickname(sqlite* db,char* username,char* newnickname);
+sql_all(sqlite3* db,char*** data,int* row,int* col);
+/*
+	-   sql_all(db,NULL,NULL,NULL);
 
+	-   char** data;
+		int row,col;
+		sql_all(db,&data,&row,&col);
+*/
 ```

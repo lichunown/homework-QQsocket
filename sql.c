@@ -115,4 +115,33 @@ int sql_changeNickname(sqlite3* db,char* username,char* newnickname){
 	}
 }
 
+int sql_all(sqlite3* db,char*** data,int* row,int* col){
+	int result = 0;
+	char** azResult;
+	int nrow,ncolumn;
+	char* zErrMsg;
+	int rc = sqlite3_get_table(db,"select * from user;",&azResult,
+								&nrow,&ncolumn,&zErrMsg); 
+	printf("row: %d    col: %d\n",nrow,ncolumn);
+	if( rc != SQLITE_OK ){
+		printf("sql_login: SQL error: %s\n", zErrMsg);
+	}else{
+		if(data!=NULL && row!=NULL && col != NULL){// transport value
+			*data = azResult;
+			*row = nrow;
+			*col = ncolumn;
+		}else{//print
+			for(int i=0;i<nrow+1;i++){
+				for(int j=0;j<ncolumn;j++){
+					printf("%s\t\t",azResult[j+i*ncolumn]);
+				}
+				printf("\n");
+			}
+		}
+		sqlite3_free_table(azResult);
+		result = 1;			
+	}	
+	sqlite3_free(zErrMsg);	
+	return result;
+}
 #endif
