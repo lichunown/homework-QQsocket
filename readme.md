@@ -19,6 +19,26 @@ make a QQ using TCP.
 
 # build
 
+to use sqlite3(for ubuntu)
+
+```bash
+sudo apt-get install sqlite3 
+sudo apt-get install libsqlite3-dev
+```
+
+build test
 ```bash
 make test
+```
+#test
+
+## sql_test
+
+```bash
+
+# create a new user
+./sql_test createuser [username] [password] [nickname]
+# login 
+./sql_test login [username] [password] 
+
 ```
