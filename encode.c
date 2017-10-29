@@ -18,4 +18,5 @@ char* createToken(int len){
 char* encodePassword(char* password){
 	return password;
 }
+
 #endif

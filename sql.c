@@ -32,7 +32,7 @@ sqlite3* createDatabase(sqlite3* db){
 		printf("SQL error: %s\n", zErrMsg);
 		sqlite3_free(zErrMsg);
 	}else{
-	 	printf("Table created successfully\n");
+	 	printf("Table user created successfully\n");
 	}
 	return db;
 }
@@ -49,7 +49,7 @@ sqlite3* databaseInit(){
 }
 
 int sql_createUser(sqlite3* db,char* username,char* password,char* nickname){
-	char sql[1024];
+	char* sql = (char*)malloc(1024); 
 	char* zErrMsg;
 	sprintf(sql,"INSERT INTO user(username,password,nickname)"\
 				" VALUES ('%s','%s','%s');",username,password,nickname);
@@ -57,17 +57,20 @@ int sql_createUser(sqlite3* db,char* username,char* password,char* nickname){
 	int rc = sqlite3_exec(db, sql, NULL, NULL, &zErrMsg);
 	if( rc != SQLITE_OK ){
 		printf("SQL error: %s\n", zErrMsg);
+		free(sql);
 		sqlite3_free(zErrMsg);
 		return 0;
 	}else{
 		printf("Records created successfully\n");
+		free(sql);
+		sqlite3_free(zErrMsg);
 		return 1;
 	}
 }
 
 int sql_login(sqlite3* db,char* username,char* password,char** gettingnick){
 	int result = 0;
-	char sql[1024];
+	char* sql = (char*)malloc(1024); 
 	password = encodePassword(password);// TODO :may need to delete this point
 	sprintf(sql,"select nickname from user"\
 				" where username='%s' and password='%s';",username,password);
@@ -88,9 +91,28 @@ int sql_login(sqlite3* db,char* username,char* password,char** gettingnick){
 			result = 1;			
 		}
 	}	
+	free(sql);
 	sqlite3_free(zErrMsg);
 	sqlite3_free_table(azResult);	
 	return result;
+}
+
+int sql_changeNickname(sqlite3* db,char* username,char* newnickname){
+	char* sql = (char*)malloc(1024); 
+	sprintf(sql,"update user set nickname='%s'" \
+				"where username='%s';",newnickname,username);
+	char* zErrMsg;
+	int rc = sqlite3_exec(db, sql, NULL, NULL, &zErrMsg);
+	free(sql);
+	if( rc != SQLITE_OK ){
+		printf("SQL error: %s\n", zErrMsg);
+		sqlite3_free(zErrMsg);
+		return 0;
+	}else{
+		printf("nickname change successfully\n");
+		sqlite3_free(zErrMsg);
+		return 1;
+	}
 }
 
 #endif

@@ -30,7 +30,7 @@ build test
 ```bash
 make test
 ```
-#test
+# test
 
 ## sql_test
 
@@ -40,5 +40,17 @@ make test
 ./sql_test createuser [username] [password] [nickname]
 # login 
 ./sql_test login [username] [password] 
+
+```
+# document
+
+- sql.c
+```c
+int Sqlite3_open(char* name,sqlite3** db);
+sqlite3* createDatabase(sqlite3* db);
+sqlite3* databaseInit();
+int sql_createUser(sqlite3* db,char* username,char* password,char* nickname);
+int sql_login(sqlite3* db,char* username,char* password,char** gettingnick);
+int sql_changeNickname(sqlite* db,char* username,char* newnickname);
 
 ```
