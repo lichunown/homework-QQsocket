@@ -1,2 +1,4 @@
-./test_sql
+test_sql
 data.sqlite3
+client
+client.out
