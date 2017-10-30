@@ -3,6 +3,7 @@
 #include "mysocket.c"
 
 void checkcmd(int sockfd,char** splitdata){
+	printf("cmd: `%s`\n",splitdata[0]);
 	if(strcmp(splitdata[0],"#login")==0){
 
 	}else if(strcmp(splitdata[0],"#signup")==0){
@@ -10,7 +11,8 @@ void checkcmd(int sockfd,char** splitdata){
 	}else if(strcmp(splitdata[0],"#logout")==0){
 
 	}else if(strcmp(splitdata[0],"#exit")==0){
-
+		puts("exiting");
+		exit(0);
 	}else if(strcmp(splitdata[0],"#sendto")==0){
 
 	}else{

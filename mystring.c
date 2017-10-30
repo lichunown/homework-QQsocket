@@ -14,6 +14,11 @@ char** split(char* str){
 			printf("cmd can't bigger than max_length.\n");
 			break;
 		}
+		if(*str=='\n'){str++;continue;}
+		if(*str=='\0'){
+			result[0][i] = *str;
+			break;
+		}
 		result[0][i] = *str;
 		str++;
 		i++;	
@@ -28,10 +33,12 @@ char** split(char* str){
 		if(i >= DATALENGTH){
 			printf("cmd can't bigger than max_length.\n");
 			break;
-		}		
+		}	
+		if(*str=='\n'){str++;continue;}	
 		result[1][i] = *str;
 		str++;i++;
 	}
+	result[1][i] = '\0';
 	return result;
 }
 int free_splitdata(char** data){
