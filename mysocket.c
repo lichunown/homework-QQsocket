@@ -38,7 +38,24 @@ int Accept(int sockfd,struct sockaddr* addr,int size){
 	}
 	return cfd;
 }
+int Connect(int sockfd,struct sockaddr* addr,int size){
+	int r = connect(sockfd,addr,size);
+	if(r==-1){
+		printf("socket connect error.");
+		exit(1);
+	}
+}
 
+int CreateClient(char* serverip,int port){
+	int sockfd = Socket(AF_INET,SOCK_STREAM,0);
+	struct sockaddr_in serveraddr;
+	bzero(&serveraddr,sizeof(serveraddr));
+	serveraddr.sin_family = AF_INET;
+	serveraddr.sin_port = htons(port);
+	serveraddr.sin_addr.s_addr = inet_addr(serverip);// TODO
+	Connect(sockfd,(struct sockaddr*)serveraddr,sizeof(serveraddr));
+	return sockfd;
+}
 int CreateServer(int port,int backlog){
 	int sockfd = Socket(AF_INET,SOCK_STREAM,0);
 	struct sockaddr_in serveraddr;
