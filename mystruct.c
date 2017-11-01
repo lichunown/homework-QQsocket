@@ -19,10 +19,20 @@ struct HEAD_DATA{
 	int datalen;
 }HEAD_DATA;
 
-int login(char* username,char* password){
+struct HEAD_USER_ALL{
+	struct HEAD_MAIN main;
+	struct HEAD_USER user;
+}
+HEAD_USER_ALL* data_login(char* username,char* password){
+	struct HEAD_USER_ALL* data = (struct HEAD_USER_ALL*)malloc(sizeof(struct HEAD_USER_ALL));
+	bzero(data,sizeof(struct HEAD_USER_ALL));
+	data->main.mode = 0;
+	data->user.logmode = (char)1;
+	strcpy(data->user.username,username);
+	strcpy(data->user.password,password);
 
 }
-int signup(char* username,char* password){
+int data_signup(char* username,char* password){
 	
 }
 #endif

@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include "mystring.c"
 #include "mysocket.c"
+void client_login(int sockfd,char* data);
+void client_signup(int sockfd,char* data);
+void client_signout(int sockfd,char* data);
+
 
 void checkcmd(int sockfd,char** splitdata){
 	printf("cmd: `%s`\n",splitdata[0]);
@@ -56,3 +60,9 @@ int main(int argv,char* args[]){
 	return 0;
 }
 
+void client_login(int sockfd,char* data){
+	char** uandp = split(data);
+	char* username = uandp[0];
+	char* password = uandp[1];
+	
+}

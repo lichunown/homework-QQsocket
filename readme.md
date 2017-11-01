@@ -10,6 +10,10 @@ make a QQ using TCP.
 |-----|-----|
 |char mode|char logmode; char username[16];char password[16];char nickname[16];|
 |1|49|
+mode = 0; user
+mode = 1; data 
+logmode = 1; login
+logmode = 0; signup
 
 |HEAD_MAIN|HEAD_DATA|
 |-----|-----|
