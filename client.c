@@ -2,9 +2,14 @@
 #include "mystring.c"
 #include "mysocket.c"
 #include "mystruct.c"
+#include "encode.c"
+#define DEBUG true
 
 void client_login(int sockfd,char* data);
 void client_signup(int sockfd,char* data);
+void client_signout(int sockfd,char* data);
+
+
 
 void checkcmd(int sockfd,char** splitdata){
 	printf("cmd: `%s`\n",splitdata[0]);
@@ -24,19 +29,22 @@ void checkcmd(int sockfd,char** splitdata){
 	}
 }
 void mainReadLoop(int sockfd){
+	char getdatas[1024];
 	while(1){
-
+		read(sockfd,getdatas,sizeof(sockfd));
+		fputs(getdatas,stdout);
 	}
 }
 
 void mainWriteLoop(int sockfd){
 	char input[1024];
 	while(1){
-		fgets(input,80,stdin);
+		fgets(input,1024,stdin);
 		printf("you input: %s\n",input);
 		char** splitdata = split(input);
 		checkcmd(sockfd,splitdata);
 		free_splitdata(splitdata);
+		bzero(input,1024);
 	}
 }
 
@@ -60,3 +68,29 @@ int main(int argv,char* args[]){
 	return 0;
 }
 
+void client_login(int sockfd,char* data){
+	char** uandp = split(data);
+	char* username = uandp[0];
+	char* password = uandp[1];
+	struct HEAD_USER_ALL* senddata = data_login(username,password);
+	#ifdef DEBUG
+	printf("[sending]:");
+	print16((char*)senddata,sizeof(struct HEAD_USER_ALL));
+	#endif
+	write(sockfd,(char*)senddata,sizeof(senddata));
+	free(senddata);
+	free_splitdata(uandp);
+}
+void client_signup(int sockfd,char* data){// TODO
+	char** uandp = split(data);
+	char* username = uandp[0];
+	char* password = uandp[1];
+	struct HEAD_USER_ALL* senddata = data_login(username,password);
+	#ifdef DEBUG
+	printf("[sending]:");
+	print16((char*)senddata,sizeof(struct HEAD_USER_ALL));
+	#endif
+	write(sockfd,(char*)senddata,sizeof(senddata));
+	free(senddata);
+	free_splitdata(uandp);
+}

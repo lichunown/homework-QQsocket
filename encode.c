@@ -19,4 +19,16 @@ char* encodePassword(char* password){
 	return password;
 }
 
+void print16(char* data,int size){
+	for(int i=0;i<size;i++){
+		printf("%02x ", data[i]);
+	}
+	printf("\n");
+}
+void printAscii(char* data,int size){
+	for(int i=0;i<size;i++){
+		printf("%c ", data[i]);
+	}
+	printf("\n");
+}
 #endif

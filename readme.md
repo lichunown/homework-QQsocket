@@ -10,23 +10,41 @@ make a QQ using TCP.
 |-----|-----|
 |char mode|char logmode; char username[16];char password[16];char nickname[16];|
 |1|49|
+mode = 0; user
+mode = 1; data 
+logmode = 1; login
+logmode = 0; signup
 
 |HEAD_MAIN|HEAD_DATA|
 |-----|-----|
 |char mode|char token[32];char datamode;int datalen;|
 |1|37|
 
+datamode = 0; signout
+
 
 # build
 
-to use sqlite3(for ubuntu)
+- to use sqlite3(for ubuntu)
 
 ```bash
 sudo apt-get install sqlite3 
 sudo apt-get install libsqlite3-dev
 ```
 
-build test
+- use glib
+(glib download)[http://ftp.acc.umu.se/pub/GNOME/sources/glib/2.54/]
+
+```
+./configure
+make
+make install
+# or #
+# ./configure --prefix=/usr && make && make install
+```
+
+- build test
+
 ```bash
 make test
 ```
@@ -64,3 +82,6 @@ sql_all(sqlite3* db,char*** data,int* row,int* col);
 		sql_all(db,&data,&row,&col);
 */
 ```
+# TODO
+
+turn to use glib.
