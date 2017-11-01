@@ -1,13 +1,17 @@
 #include <stdio.h>
 #include "mystring.c"
 #include "mysocket.c"
+#include "mystruct.c"
+
+void client_login(int sockfd,char* data);
+void client_signup(int sockfd,char* data);
 
 void checkcmd(int sockfd,char** splitdata){
 	printf("cmd: `%s`\n",splitdata[0]);
 	if(strcmp(splitdata[0],"#login")==0){
-
+		client_login(sockfd,splitdata[1]);// TODO
 	}else if(strcmp(splitdata[0],"#signup")==0){
-
+		client_signup(sockfd,splitdata[1]);// TODO
 	}else if(strcmp(splitdata[0],"#logout")==0){
 
 	}else if(strcmp(splitdata[0],"#exit")==0){
