@@ -42,6 +42,7 @@ make install
 # or #
 # ./configure --prefix=/usr && make && make install
 ```
+(ubuntu完整安装glib心得)[http://blog.csdn.net/andylauren/article/details/51346388]
 
 - build test
 

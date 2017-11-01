@@ -1,6 +1,6 @@
 #include "sql.c"
 #include <string.h>
-
+#include <glib.h>
 //sql_changeNickname
 
 
