@@ -18,6 +18,7 @@ int Socket(int domain, int type, int protocol){
 		printf("ERROR: socket create error\n");
 		exit(1);
 	}
+	return sockfd;
 }
 int Bind(int sockfd,struct sockaddr* addr,socklen_t size){
 	int r = bind(sockfd,addr,size);
@@ -49,6 +50,7 @@ int Connect(int sockfd,struct sockaddr* addr,int size){
 		printf("socket connect error.");
 		exit(1);
 	}
+	return r;
 }
 
 int CreateClient(char* serverip,int port){
@@ -70,5 +72,6 @@ int CreateServer(int port,int backlog){
 	addr.sin_addr.s_addr = inet_addr("0.0.0.0");// TODO inet_aton 
 	Bind(sockfd,(struct sockaddr*)&addr,sizeof(addr));
 	Listen(sockfd,backlog);
+	return sockfd;
 }
 #endif

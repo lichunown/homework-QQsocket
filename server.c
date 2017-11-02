@@ -2,7 +2,9 @@
 #include <sys/select.h>
 #include <poll.h>  
 #include <sys/epoll.h>  
+#include <glib.h>
 
+GHashTable *g_hash_table_new(GHashFunc hash_func, GEqualFunc key_equal_func);
   
 //最多处理的connect  
 #define MAX_EVENTS 500  
@@ -24,11 +26,8 @@ void RecvData(int fd);
 
   
 int main()  
-{  
-    int i, ret, sinSize;  
-    int recvLen = 0;  
-    fd_set readfds, writefds;  
-    int sockListen, sockSvr, sockMax;  
+{    
+    int sockListen;  
     int timeout;  
     /*
     struct sockaddr_in server_addr;  
