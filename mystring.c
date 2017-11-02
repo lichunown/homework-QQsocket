@@ -41,10 +41,41 @@ char** split(char* str){
 	return result;
 }
 
+char** split_num(char* str,int num){
+	char** result = (char**)malloc(sizeof(char*) * num);
+	for(int i=0;i<num;i++){
+		result[i] = (char*)malloc(80);
+	}
+	int i = 0;
+	int ii = 0;
+	char* p = str;
+	while(*p != '\0'){
+		if(ii>=80){
+			printf("string too big");
+		}
+		if(*p = ' '){
+			result[i][ii] = '\0';
+			ii = 0;
+			i++;
+		}else{
+			result[i][ii] = *p;
+			ii++;
+		}
+		p++;
+	}
+	result[i][ii] = '\0';
+	return result;
+}
+
 int free_splitdata(char** data){
 	free(data[0]);
 	free(data[1]);
 	free(data);
 }
-
+int free_splitdata_num(char** data,int num){
+	for(int i=0;i<num;i++){
+		free(data[i]);
+	}
+	free(data);
+}
 #endif

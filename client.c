@@ -3,12 +3,15 @@
 #include "mysocket.c"
 #include "mystruct.c"
 #include "encode.c"
+#include <stdlib.h>
+
+	
 #define DEBUG true
 
 void client_login(int sockfd,char* data);
 void client_signup(int sockfd,char* data);
-void client_signout(int sockfd,char* data);
-
+void client_logout(int sockfd,char* data);
+void client_sendto(int sockfd,char* data);
 
 
 void checkcmd(int sockfd,char** splitdata){
@@ -18,12 +21,12 @@ void checkcmd(int sockfd,char** splitdata){
 	}else if(strcmp(splitdata[0],"#signup")==0){
 		client_signup(sockfd,splitdata[1]);// TODO
 	}else if(strcmp(splitdata[0],"#logout")==0){
-
+		client_logout(sockfd,splitdata[1]);// TODO
 	}else if(strcmp(splitdata[0],"#exit")==0){
 		puts("exiting");
 		exit(0);
 	}else if(strcmp(splitdata[0],"#sendto")==0){
-
+		client_sendto(sockfd,splitdata[1]);// TODO
 	}else{
 		printf("please use cmds:\n\t\t`#login` `#signup` `#logout` `#exit` `#sendto`\n");
 	}
@@ -68,7 +71,21 @@ int main(int argv,char* args[]){
 	return 0;
 }
 
-void client_login(int sockfd,char* data){
+void client_signup(int sockfd,char* data){
+	char** uandp = split_num(data,3);
+	char* username = uandp[0];
+	char* password = uandp[1];
+	char* nickname = uandp[3];
+	struct HEAD_USER_ALL* senddata = data_signup(username,password,nickname);
+	#ifdef DEBUG
+	printf("[sending]:");
+	print16((char*)senddata,sizeof(struct HEAD_USER_ALL));
+	#endif
+	write(sockfd,(char*)senddata,sizeof(senddata));
+	free(senddata);
+	free_splitdata_num(uandp,3);
+}
+void client_login(int sockfd,char* data){// TODO
 	char** uandp = split(data);
 	char* username = uandp[0];
 	char* password = uandp[1];
@@ -81,16 +98,10 @@ void client_login(int sockfd,char* data){
 	free(senddata);
 	free_splitdata(uandp);
 }
-void client_signup(int sockfd,char* data){// TODO
-	char** uandp = split(data);
-	char* username = uandp[0];
-	char* password = uandp[1];
-	struct HEAD_USER_ALL* senddata = data_login(username,password);
-	#ifdef DEBUG
-	printf("[sending]:");
-	print16((char*)senddata,sizeof(struct HEAD_USER_ALL));
-	#endif
-	write(sockfd,(char*)senddata,sizeof(senddata));
-	free(senddata);
-	free_splitdata(uandp);
+
+void client_logout(int sockfd,char* data){
+
+}
+void client_sendto(int sockfd,char* data){
+	
 }
