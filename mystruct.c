@@ -56,4 +56,24 @@ struct HEAD_DATA_ALL* data_logout(char* token){
 	data->data.datamode = 0;
 	return data;
 }
+
+struct HEAD_DATA_ALL* data_showlist(char* token){
+	struct HEAD_DATA_ALL* data = (struct HEAD_DATA_ALL*)malloc(sizeof(HEAD_DATA_ALL));
+	bzero(data,sizeof(HEAD_DATA_ALL));
+	data->main.mode = (char)1;
+	memcpy(data->data.token,token,32);
+	data->data.datamode = 2;
+	return data;
+}
+
+struct HEAD_DATA_ALL* data_showlist(char* token){
+	struct HEAD_DATA_ALL* data = (struct HEAD_DATA_ALL*)malloc(sizeof(HEAD_DATA_ALL));
+	bzero(data,sizeof(HEAD_DATA_ALL));
+	data->main.mode = (char)1;
+	memcpy(data->data.token,token,32);
+	data->data.datamode = 2;
+	return data;
+}
+
+
 #endif

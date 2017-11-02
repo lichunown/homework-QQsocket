@@ -42,6 +42,7 @@ void mainReadLoop(int sockfd){
 void mainWriteLoop(int sockfd){
 	char input[1024];
 	while(1){
+		fputs("\n>>>",stdout);
 		fgets(input,1024,stdin);
 		printf("you input: %s\n",input);
 		char** splitdata = split(input);
@@ -60,7 +61,7 @@ int main(int argv,char* args[]){
 	int port = atoi(args[2]);
 	int sockfd = CreateClient(args[1],port);
 	if(sockfd){
-		printf("[message]: Connected %s:%s\n\n\n",args[1],args[2]);
+		printf("[message]: Connected %s:%s\n\n",args[1],args[2]);
 	}
 	int pid = fork();
 	if(pid==0){// read
@@ -75,7 +76,8 @@ void client_signup(int sockfd,char* data){
 	char** uandp = split_num(data,3);
 	char* username = uandp[0];
 	char* password = uandp[1];
-	char* nickname = uandp[3];
+	char* nickname = uandp[2];
+	printf("you input username:%s password:%s nickname:%s",username,password,nickname);
 	struct HEAD_USER_ALL* senddata = data_signup(username,password,nickname);
 	#ifdef DEBUG
 	printf("[sending]:");
@@ -89,7 +91,7 @@ void client_login(int sockfd,char* data){// TODO
 	char** uandp = split(data);
 	char* username = uandp[0];
 	char* password = uandp[1];
-	printf("you input username:%s password:%s",username,password);
+	//printf("you input username:%s password:%s",username,password);
 	struct HEAD_USER_ALL* senddata = data_login(username,password);
 	#ifdef DEBUG
 	printf("[sending]:");

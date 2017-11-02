@@ -1,6 +1,7 @@
 #ifndef MYSTRING_C
 #define MYSTRING_C 0
 #include <stdlib.h>
+#include <stdio.h>
 #define CMDLENGTH 20
 #define DATALENGTH 1024
 char** split(char* str){
@@ -50,10 +51,14 @@ char** split_num(char* str,int num){
 	int ii = 0;
 	char* p = str;
 	while(*p != '\0'){
+		if(i>=num){
+			break;
+		}
 		if(ii>=80){
 			printf("string too big");
+			break;
 		}
-		if(*p = ' '){
+		if(*p == ' '){
 			result[i][ii] = '\0';
 			ii = 0;
 			i++;
@@ -63,19 +68,26 @@ char** split_num(char* str,int num){
 		}
 		p++;
 	}
+	for(int j=i+1;j<num;j++){
+		result[j][0] = '\0';
+	}
 	result[i][ii] = '\0';
 	return result;
 }
 
-int free_splitdata(char** data){
+void free_splitdata(char** data){
+
 	free(data[0]);
 	free(data[1]);
 	free(data);
+
 }
-int free_splitdata_num(char** data,int num){
+void free_splitdata_num(char** data,int num){
+
 	for(int i=0;i<num;i++){
 		free(data[i]);
 	}
 	free(data);
+
 }
 #endif

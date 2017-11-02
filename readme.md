@@ -21,7 +21,7 @@ logmode = 0; signup
 |1|37|
 
 datamode = 0; signout
-
+datamode = 2; show list
 
 # build
 
