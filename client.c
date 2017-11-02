@@ -89,6 +89,7 @@ void client_login(int sockfd,char* data){// TODO
 	char** uandp = split(data);
 	char* username = uandp[0];
 	char* password = uandp[1];
+	printf("you input username:%s password:%s",username,password);
 	struct HEAD_USER_ALL* senddata = data_login(username,password);
 	#ifdef DEBUG
 	printf("[sending]:");
