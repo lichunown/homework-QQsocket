@@ -24,6 +24,7 @@ void checkcmd(int sockfd,char** splitdata){
 		client_logout(sockfd,splitdata[1]);// TODO
 	}else if(strcmp(splitdata[0],"#exit")==0){
 		puts("exiting");
+		close(sockfd);
 		exit(0);
 	}else if(strcmp(splitdata[0],"#sendto")==0){
 		client_sendto(sockfd,splitdata[1]);// TODO
