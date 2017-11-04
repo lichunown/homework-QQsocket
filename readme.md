@@ -6,38 +6,38 @@ make a QQ using TCP.
 
 ### client to server
 
-|HEAD_MAIN|HEAD_USER|
-|-----|-----|
-|char mode|char logmode; char username[16];char password[16];char nickname[16];|
-|1|49|
+| HEAD_MAIN | HEAD_USER                                |
+| --------- | ---------------------------------------- |
+| char mode | char logmode; char username[16];char password[16];char nickname[16]; |
+| 1         | 49                                       |
 
-|discript                   |HEAD_MAIN mode|HEAD_USER logmode|char username|char password|char nickname|
-|---------------------------|--------------|-----------------|-------------|-------------|-------------|
-|login                      |  0           | 1               |`username`   |`password`   |[]           |
-|signup                     |  0           | 0               |`username`   |`password`   |`nickname`   |
-|server_return login error  |  0           | 11              |`username`   |`password`   |[]           |
-|server_return login success|  0           | 10              |`username`   |`token1`     |`token2`     |
-|server_return signup error |  0           | 21              |`username`   |`password`   |`nickname`   |
-|server_return signup succ  |  0           | 20              |`username`   |`password`   |`nickname`   |
+| discript                    | HEAD_MAIN mode | HEAD_USER logmode | char username | char password | char nickname |
+| --------------------------- | -------------- | ----------------- | ------------- | ------------- | ------------- |
+| login                       | 0              | 1                 | `username`    | `password`    | []            |
+| signup                      | 0              | 0                 | `username`    | `password`    | `nickname`    |
+| server_return login error   | 0              | 11                | `username`    | `password`    | []            |
+| server_return login success | 0              | 10                | `username`    | `token1`      | `token2`      |
+| server_return signup error  | 0              | 21                | `username`    | `password`    | `nickname`    |
+| server_return signup succ   | 0              | 20                | `username`    | `password`    | `nickname`    |
 
-|HEAD_MAIN|HEAD_DATA|
-|-----|-----|
-|char mode|char token[32];char datamode;int datalen;|
-|1|37|
+| HEAD_MAIN | HEAD_DATA                                |
+| --------- | ---------------------------------------- |
+| char mode | char token[32];char datamode;int datalen; |
+| 1         | 37                                       |
 
-|discript|HEAD_MAIN mode|token  |HEAD_DATA datamode|int datalen|
-|--------|--------------|-------|-----------------|-------------|
-|logout  |  0           |`token`| 0               |  `num`      |
-|senddata|  0           |`token`| 1               |  `num`      |
-|showlist|  0           |`token`| 2               |  `num`      |
+| discript | HEAD_MAIN mode | token   | HEAD_DATA datamode | int datalen |
+| -------- | -------------- | ------- | ------------------ | ----------- |
+| logout   | 0              | `token` | 0                  | `num`       |
+| senddata | 0              | `token` | 1                  | `num`       |
+| showlist | 0              | `token` | 2                  | `num`       |
 
 ### server to client
 
-|discript      |HEAD_MAIN mode|mode |size|
-|--------------|--------------|-----|----|
-|logout success|1             |0    |   |
-|sendata       |1             |1    |   |
-|lists         |1             |2    |   |
+| discript       | HEAD_MAIN mode | mode | size  |
+| -------------- | -------------- | ---- | ----- |
+| logout success | 1              | 0    | `num` |
+| sendata        | 1              | 1    | `num` |
+| lists          | 1              | 2    | `num` |
 
 
 
@@ -52,14 +52,30 @@ sudo apt-get install libsqlite3-dev
 ```
 
 - use glib
-(glib download)[http://ftp.acc.umu.se/pub/GNOME/sources/glib/2.54/]
+  (glib download)[http://ftp.acc.umu.se/pub/GNOME/sources/glib/2.54/]
 
 ```
-./configure
+wget http://ftp.gnome.org/pub/gnome/sources/glib/2.54/glib-2.54.2.tar.xz
+tar -xvJf ./glib-2.54.2.tar.xz
+cd ./glib-2.54.2.tar.xz
+
+sudo apt-get install gcc
+sudo apt-get install zlib1g-dev
+sudo apt-get install pkg-config
+sudo apt-get install libffi-dev
+sudo apt-get install gettext
+sudo apt-get install libmount-dev
+sudo apt-get install libpcre3-dev
+
 make
 make install
-# or #
-# ./configure --prefix=/usr && make && make install
+
+# show the gcc option 
+pkg-config glib-2.0 --libs
+
+
+sudo cp -r /usr/local/include/glib-2.0/* /usr/include/  
+sudo cp /usr/local/lib/glib-2.0/include/glibconfig.h /usr/include/
 ```
 (ubuntu完整安装glib心得)[http://blog.csdn.net/andylauren/article/details/51346388]
 

@@ -22,7 +22,7 @@ int Socket(int domain, int type, int protocol){
 }
 int Bind(int sockfd,struct sockaddr* addr,socklen_t size){
 	int r = bind(sockfd,addr,size);
-	if(r==-1){
+	if(r < 0){
 		printf("ERROR: bind error.\n");
 		exit(1);
 	}
@@ -30,7 +30,7 @@ int Bind(int sockfd,struct sockaddr* addr,socklen_t size){
 }
 int Listen(int sockfd,int backlog){
 	int r = listen(sockfd,backlog);
-	if(r==-1){
+	if(r < 0){
 		printf("ERROR: listen error.\n");
 		exit(1);
 	}
@@ -47,7 +47,7 @@ int Accept(int sockfd,struct sockaddr* addr,socklen_t* size){
 int Connect(int sockfd,struct sockaddr* addr,int size){
 	int r = connect(sockfd,addr,size);
 	if(r==-1){
-		printf("socket connect error.");
+		printf("socket connect error.\n");
 		exit(1);
 	}
 	return r;

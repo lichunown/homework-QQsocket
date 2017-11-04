@@ -59,6 +59,7 @@ int main(int argv,char* args[]){
 		printf("please input: `name [ip_address] [port]`\n");
 		exit(1);
 	}
+	printf("you input  [IP]:%s  [PORT]:%s\n",args[1],args[2]);
 	int port = atoi(args[2]);
 	int sockfd = CreateClient(args[1],port);
 	if(sockfd){

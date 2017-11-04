@@ -33,9 +33,9 @@ GHashTable* TokenTable = NULL;
 GHashTable* EventTable = NULL;
 sqlite3* db = NULL;
 
-int main(){   
+int main(int argv,char* args[]){   
 	db = databaseInit();
-
+    int port = 8001;
 	UserTable = g_hash_table_new(g_str_hash, g_str_equal);//username -> event
 	UserDataTable = g_hash_table_new(g_str_hash, g_str_equal);// username -> nickname
 	TokenTable = g_hash_table_new(g_str_hash, g_str_equal); //token -> username
@@ -45,17 +45,20 @@ int main(){
 	struct epoll_event eventList[MAX_EVENTS];  
 
     int timeout = -1;  
-
-    int sockListen = CreateServer(8001,10);
+    if(argv == 2){
+        port = atoi(args[1]);
+    }
+    int sockListen = CreateServer(port,10);
+    printf("listened: %d\n",port);
     struct epoll_event event;  
     event.events = EPOLLIN;  
     event.data.fd = sockListen;  
-    // epoll_ctrl  
     if(epoll_ctl(epollfd, EPOLL_CTL_ADD, sockListen, &event) < 0){  
         printf("epoll add fail : fd = %d\n", sockListen);  
         return -1;  
     }  
     while(1){                 
+        printf("start epoll....\n");
         int ret = epoll_wait(epollfd, eventList, MAX_EVENTS, timeout);  
         if(ret < 0){  
             printf("epoll error\n");  
