@@ -4,7 +4,7 @@
 #include "mystruct.c"
 #include "encode.c"
 #include <stdlib.h>
-
+#include <signal.h>
 	
 #define DEBUG true
 
@@ -25,6 +25,7 @@ void checkcmd(int sockfd,char** splitdata){
 	}else if(strcmp(splitdata[0],"#exit")==0){
 		puts("exiting");
 		close(sockfd);
+		kill(0,9);
 		exit(0);
 	}else if(strcmp(splitdata[0],"#sendto")==0){
 		client_sendto(sockfd,splitdata[1]);// TODO
@@ -42,8 +43,9 @@ void mainReadLoop(int sockfd){
 
 void mainWriteLoop(int sockfd){
 	char input[1024];
+	puts("");
 	while(1){
-		fputs("\n>>>",stdout);
+		fputs(">>>",stdout);
 		fgets(input,1024,stdin);
 		printf("you input: %s\n",input);
 		char** splitdata = split(input);
@@ -69,7 +71,7 @@ int main(int argv,char* args[]){
 	if(pid==0){// read
 		mainReadLoop(sockfd);
 	}else{// write
-		mainWriteLoop(sockfd);
+		mainWriteLoop(sockfd);		
 	}
 	return 0;
 }
