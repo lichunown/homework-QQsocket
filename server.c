@@ -21,11 +21,15 @@ void SendData(int epollfd, struct epoll_event* event);
 void userDataProcess(int sockfd, struct HEAD_USER* data);
 void dataDataProcess(int sockfd, struct HEAD_DATA* data);
 
+void server_login(char* username,char* password);
+void server_signup(char* username,char* password,char* nickname);
+
 GHashTable* UserTable = NULL;
 GHashTable* TokenTable = NULL;
 GHashTable* EventTable = NULL;
-
+sqlite3* db = NULL;
 int main(){   
+	db = databaseInit();
 
 	UserTable = g_hash_table_new(g_str_hash, g_str_equal);//username -> event
 	TokenTable = g_hash_table_new(g_str_hash, g_str_equal); //token -> username
@@ -108,10 +112,10 @@ void RecvData(int epollfd, int fd){
 void userDataProcess(int sockfd, struct HEAD_USER* data){
 	if(data->logmode==0){
 		printf("\t\tlogmode = 0  [signup]\n");
-		printf("\t\tusername = %s password = %s nickname = %s \n",data->username,data->password,data->nickname);
+		printf("\t\tusername = `%s` password = `%s` nickname = `%s` \n",data->username,data->password,data->nickname);
 	}else if(data->logmode==1){
 		printf("\t\tlogmode = 1  [login]\n");
-		printf("\t\tusername = %s password = %s \n",data->username,data->password);
+		printf("\t\tusername = `%s` password = `%s` \n",data->username,data->password);
 	}
 }
 void dataDataProcess(int sockfd, struct HEAD_DATA* data){

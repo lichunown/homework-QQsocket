@@ -10,18 +10,37 @@ make a QQ using TCP.
 |-----|-----|
 |char mode|char logmode; char username[16];char password[16];char nickname[16];|
 |1|49|
-mode = 0; user
-mode = 1; data 
-logmode = 1; login
-logmode = 0; signup
+
+|discript                   |HEAD_MAIN mode|HEAD_USER logmode|char username|char password|char nickname|
+|---------------------------|--------------|-----------------|-------------|-------------|-------------|
+|login                      |  0           | 1               |`username`   |`password`   |[]           |
+|signup                     |  0           | 0               |`username`   |`password`   |`nickname`   |
+|server_return login error  |  0           | 11              |`username`   |`password`   |[]           |
+|server_return login success|  0           | 10              |`username`   |`password`   |[]           |
+|server_return signup error |  0           | 21              |`username`   |`password`   |`nickname`   |
+|server_return signup succ  |  0           | 20              |`username`   |`password`   |`nickname`   |
 
 |HEAD_MAIN|HEAD_DATA|
 |-----|-----|
 |char mode|char token[32];char datamode;int datalen;|
 |1|37|
 
-datamode = 0; signout
-datamode = 2; show list
+|discript|HEAD_MAIN mode|token  |HEAD_DATA datamode|int datalen|
+|--------|--------------|-------|-----------------|-------------|
+|logout  |  0           |`token`| 0               |  `num`      |
+|senddata|  0           |`token`| 1               |  `num`      |
+|showlist|  0           |`token`| 2               |  `num`      |
+
+### server to client
+
+|discript      |HEAD_MAIN mode|mode |size|
+|--------------|--------------|-----|----|
+|logout success|1             |0    |   |
+|sendata       |1             |1    |   |
+|lists         |1             |2    |   |
+
+
+
 
 # build
 
