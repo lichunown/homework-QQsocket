@@ -7,7 +7,7 @@
 #include <poll.h>  
 #include <sys/epoll.h>  
 #include <glib.h>
-
+#include <stdlib.h>
 //最多处理的connect  
 #define MAX_EVENTS 100  
 
@@ -40,6 +40,7 @@ int main(){
 	UserDataTable = g_hash_table_new(g_str_hash, g_str_equal);// username -> nickname
 	TokenTable = g_hash_table_new(g_str_hash, g_str_equal); //token -> username
 	EventTable = g_hash_table_new(g_str_hash, g_str_equal); //sockfd -> event*
+
 	int epollfd = epoll_create(MAX_EVENTS);  
 	struct epoll_event eventList[MAX_EVENTS];  
 
@@ -92,6 +93,7 @@ void AcceptConn(int epollfd, int srvfd){
     event.data.fd = confd;  
     event.events =  EPOLLIN;  
     epoll_ctl(epollfd, EPOLL_CTL_ADD, confd, &event);  
+    g_hash_table_insert(EventTable, itoa(confd), itoa((size_t)&event));
 }  
   
 //读取数据  
@@ -122,6 +124,10 @@ void userDataProcess(int epollfd,int sockfd, struct HEAD_USER* data){
 	}else if(data->logmode==1){
 		printf("\t\tlogmode = 1  [login]\n");
 		printf("\t\tusername = `%s` password = `%s` \n",data->username,data->password);
+		#ifdef DEBUG
+		printf("[recv]:");
+		print16((char*)data,sizeof(struct HEAD_USER));
+		#endif
 		char* nickname = (char*)malloc(16);
 		int r = sql_login(db,data->username,data->password,&nickname);
 		if(r){
@@ -160,7 +166,13 @@ void SendData(int epollfd, struct epoll_event* event){
 
 void SendToFd(int epollfd, int sockfd,char* data,int size){
 	char* str_sockfd = itoa(sockfd);
-	struct epoll_event* event = g_hash_table_lookup(EventTable,str_sockfd);
+	char* str_event = g_hash_table_lookup(EventTable,str_sockfd);
+	if(str_event==NULL){
+		printf("hash error");
+		close(sockfd);
+		return;
+	}
+	struct epoll_event* event = (struct epoll_event*)atol(str_event);
 	free(str_sockfd);
 	if(event->events & EPOLLOUT){
 		printf("[error]: send to %d busy\n",sockfd);

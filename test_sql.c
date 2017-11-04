@@ -5,6 +5,7 @@
 
 
 int main(int argv,char* args[]){
+	//printf("%ld   %ld   %ld",sizeof(size_t),sizeof(char*),sizeof(long));
 	char* INFO = "please use `createuser` `login` `changenickname` `all` cmds.\n";
 	sqlite3* db = databaseInit();
 

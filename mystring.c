@@ -100,12 +100,12 @@ int m_pow(int num,int n){
 	}
 	return num;
 }
-char* itoa(int num){
-	int len = 1;
+char* itoa(long num){
+	long len = 1;
 	while((num/m_pow(10,len)) > 0 )len++;
 	len++;
 	char* data = (char*)malloc(len);
-	sprintf(data,"%d",num);
+	sprintf(data,"%ld",num);
 	return data;
 }
 
