@@ -66,7 +66,11 @@ struct HEAD_DATA_ALL* data_showlist(char* token){
 	return data;
 }
 
-
+struct SERVERSENDSTRUCT{
+	int sockfd;
+	int datalen;
+	char* data;
+}SERVERSENDSTRUCT;
 
 
 #endif

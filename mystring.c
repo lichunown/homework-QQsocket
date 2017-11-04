@@ -2,6 +2,8 @@
 #define MYSTRING_C 0
 #include <stdlib.h>
 #include <stdio.h>
+
+
 #define CMDLENGTH 20
 #define DATALENGTH 1024
 char** split(char* str){
@@ -90,4 +92,21 @@ void free_splitdata_num(char** data,int num){
 	free(data);
 
 }
+
+int m_pow(int num,int n){
+	if(n==0)return 1;
+	for(int i = 0;i < n-1; i++){
+		num *= num;
+	}
+	return num;
+}
+char* itoa(int num){
+	int len = 1;
+	while((num/m_pow(10,len)) > 0 )len++;
+	len++;
+	char* data = (char*)malloc(len);
+	sprintf(data,"%d",num);
+	return data;
+}
+
 #endif
