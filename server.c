@@ -1,6 +1,8 @@
 #include "mysocket.c"
 #include "mystruct.c"
 #include "mystring.c"
+#include "sql.c"
+#include "encode.c"
 #include <sys/select.h>
 #include <poll.h>  
 #include <sys/epoll.h>  
@@ -18,20 +20,24 @@ void AcceptConn(int epollfd, int srvfd);
 void RecvData(int epollfd, int fd);  
 void SendData(int epollfd, struct epoll_event* event);
 
-void userDataProcess(int sockfd, struct HEAD_USER* data);
-void dataDataProcess(int sockfd, struct HEAD_DATA* data);
+void userDataProcess(int epollfd,int sockfd, struct HEAD_USER* data);
+void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data);
 
 void server_login(char* username,char* password);
 void server_signup(char* username,char* password,char* nickname);
+void SendToFd(int epollfd, int sockfd,char* data,int size);
 
 GHashTable* UserTable = NULL;
+GHashTable* UserDataTable = NULL;
 GHashTable* TokenTable = NULL;
 GHashTable* EventTable = NULL;
 sqlite3* db = NULL;
+
 int main(){   
 	db = databaseInit();
 
 	UserTable = g_hash_table_new(g_str_hash, g_str_equal);//username -> event
+	UserDataTable = g_hash_table_new(g_str_hash, g_str_equal);// username -> nickname
 	TokenTable = g_hash_table_new(g_str_hash, g_str_equal); //token -> username
 	EventTable = g_hash_table_new(g_str_hash, g_str_equal); //sockfd -> event*
 	int epollfd = epoll_create(MAX_EVENTS);  
@@ -92,33 +98,54 @@ void AcceptConn(int epollfd, int srvfd){
 void RecvData(int epollfd, int fd){  
 	printf("Recving data:%d\n",fd);
 	struct HEAD_MAIN head_main;
-	read(fd,&head_main, sizeof(head_main));
+	recv(fd,&head_main, sizeof(head_main),MSG_WAITALL);
 	if(head_main.mode==0){
 		printf("\t receive mode = 0\n");
 		struct HEAD_USER data;
-		read(fd,&data, sizeof(data));
-		userDataProcess(fd, &data);
+		recv(fd,&data, sizeof(data),MSG_WAITALL);
+		userDataProcess(epollfd,fd, &data);
 	}else if(head_main.mode==1){
 		printf("\t receive mode = 1\n");
 		struct HEAD_DATA data;
-		read(fd,&data, sizeof(data));
-		dataDataProcess(fd,&data);
+		recv(fd,&data, sizeof(data),MSG_WAITALL);
+		dataDataProcess(epollfd,fd,&data);
 	}else{
 		printf("\tdata error\n");
 	}
 	printf("End recving\n\n");
 }  
 
-void userDataProcess(int sockfd, struct HEAD_USER* data){
+void userDataProcess(int epollfd,int sockfd, struct HEAD_USER* data){
 	if(data->logmode==0){
 		printf("\t\tlogmode = 0  [signup]\n");
 		printf("\t\tusername = `%s` password = `%s` nickname = `%s` \n",data->username,data->password,data->nickname);
 	}else if(data->logmode==1){
 		printf("\t\tlogmode = 1  [login]\n");
 		printf("\t\tusername = `%s` password = `%s` \n",data->username,data->password);
+		char* nickname = (char*)malloc(16);
+		int r = sql_login(db,data->username,data->password,&nickname);
+		if(r){
+			printf("\tlogin succeed\n");
+			struct HEAD_USER_ALL returndata;
+			returndata.main.mode = 0;
+			returndata.user.logmode = 10;
+			strcpy(returndata.user.username,data->username);
+			char* token = createToken(32);
+			memcpy(returndata.user.password,token,16);
+			memcpy(returndata.user.nickname,token+16,16);
+			SendToFd(epollfd, sockfd, (char*)&returndata,sizeof(returndata));
+		}else{
+			printf("\tlogin error\n");
+			struct HEAD_USER_ALL returndata;
+			returndata.main.mode = 0;
+			returndata.user = (struct HEAD_USER)*data;
+			returndata.user.logmode = 11;
+			SendToFd(epollfd, sockfd, (char*)&returndata,sizeof(returndata));
+		}
+		free(nickname);
 	}
 }
-void dataDataProcess(int sockfd, struct HEAD_DATA* data){
+void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data){
 
 }
 void SendData(int epollfd, struct epoll_event* event){

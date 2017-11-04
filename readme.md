@@ -16,7 +16,7 @@ make a QQ using TCP.
 |login                      |  0           | 1               |`username`   |`password`   |[]           |
 |signup                     |  0           | 0               |`username`   |`password`   |`nickname`   |
 |server_return login error  |  0           | 11              |`username`   |`password`   |[]           |
-|server_return login success|  0           | 10              |`username`   |`password`   |[]           |
+|server_return login success|  0           | 10              |`username`   |`token1`     |`token2`     |
 |server_return signup error |  0           | 21              |`username`   |`password`   |`nickname`   |
 |server_return signup succ  |  0           | 20              |`username`   |`password`   |`nickname`   |
 

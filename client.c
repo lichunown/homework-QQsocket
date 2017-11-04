@@ -35,7 +35,7 @@ void checkcmd(int sockfd,char** splitdata){
 void mainReadLoop(int sockfd){
 	char getdatas[1024];
 	while(1){
-		read(sockfd,getdatas,sizeof(sockfd));
+		recv(sockfd,getdatas,sizeof(sockfd),MSG_WAITALL);
 		fputs(getdatas,stdout);
 	}
 }
@@ -84,7 +84,7 @@ void client_signup(int sockfd,char* data){
 	printf("[sending]:");
 	print16((char*)senddata,sizeof(struct HEAD_USER_ALL));
 	#endif
-	write(sockfd,(char*)senddata,sizeof(senddata));
+	send(sockfd,(char*)senddata,sizeof(senddata),0);
 	free(senddata);
 	free_splitdata_num(uandp,3);
 }
@@ -98,7 +98,7 @@ void client_login(int sockfd,char* data){// TODO
 	printf("[sending]:");
 	print16((char*)senddata,sizeof(struct HEAD_USER_ALL));
 	#endif
-	write(sockfd,(char*)senddata,sizeof(senddata));
+	send(sockfd,(char*)senddata,sizeof(senddata),0);
 	free(senddata);
 	free_splitdata(uandp);
 }
