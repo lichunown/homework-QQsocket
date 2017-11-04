@@ -1,5 +1,7 @@
 test_sql
 data.sqlite3
 client
+test_hash
 client.out
+test_mystring
 *.out

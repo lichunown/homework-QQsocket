@@ -7,6 +7,6 @@ client:
 server:
 	gcc -g -Wall server.c -o server.out -L /usr/local/lib -lglib-2.0 -lsqlite3 
 clean:
-	rm -f test_sql client.out *.out
+	rm -f test_sql client.out *.out test_hash test_mystring
 default:
 	client server
