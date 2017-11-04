@@ -48,7 +48,7 @@ int main(int argv,char* args[]){
     if(argv == 2){
         port = atoi(args[1]);
     }
-    int sockListen = CreateServer(port,10);
+    int sockListen = CreateServer(port,5);
     printf("listened: %d\n",port);
     struct epoll_event event;  
     event.events = EPOLLIN;  
