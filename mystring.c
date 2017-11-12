@@ -4,50 +4,24 @@
 #include <stdio.h>
 
 
-#define CMDLENGTH 20
-#define DATALENGTH 1024
+#define PERSTRLENGTH 200
+
+
+char** split(char* str);
+char** split_num(char* str,int num);
+void free_splitdata(char** data);
+void free_splitdata_num(char** data,int num);
+
+
 char** split(char* str){
-	char** result = (char**)malloc(sizeof(char*)*2);
-	result[0] = (char*)malloc(sizeof(char)*CMDLENGTH);
-	result[1] = (char*)malloc(sizeof(char)*DATALENGTH);
-	int i = 0;
-	while(*str!='\0'){
-		if(i >= CMDLENGTH){
-			printf("cmd can't bigger than max_length.\n");
-			break;
-		}
-		if(*str=='\n'){str++;continue;}
-		if(*str=='\0'){
-			result[0][i] = *str;
-			break;
-		}
-		result[0][i] = *str;
-		str++;
-		i++;	
-		if(*str==' '){
-			result[0][i] = '\0';
-			i = 0;
-			break;
-		}	
-	}
-	str++;
-	while(*str!='\0'){
-		if(i >= DATALENGTH){
-			printf("cmd can't bigger than max_length.\n");
-			break;
-		}	
-		if(*str=='\n'){str++;continue;}	
-		result[1][i] = *str;
-		str++;i++;
-	}
-	result[1][i] = '\0';
-	return result;
+	return split_num(str,2);
 }
 
 char** split_num(char* str,int num){
 	char** result = (char**)malloc(sizeof(char*) * num);
 	for(int i=0;i<num;i++){
-		result[i] = (char*)malloc(80);
+		result[i] = (char*)malloc(PERSTRLENGTH);
+		bzero(&(result[i]), PERSTRLENGTH);
 	}
 	int i = 0;
 	int ii = 0;
@@ -56,7 +30,7 @@ char** split_num(char* str,int num){
 		if(i>=num){
 			break;
 		}
-		if(ii>=80){
+		if(ii >= PERSTRLENGTH){
 			printf("string too big");
 			break;
 		}
@@ -65,7 +39,7 @@ char** split_num(char* str,int num){
 			ii = 0;
 			i++;
 		}else if(*p=='\n'){
-			
+
 		}else{
 			result[i][ii] = *p;
 			ii++;
