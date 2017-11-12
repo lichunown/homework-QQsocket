@@ -34,7 +34,9 @@ int main(int argv,char* args[]){
     int sockListen = CreateServer(port,10);
     printf("listened: %d      sockfd: %d\n",port,sockListen);
     struct sockaddr_in clientaddr;
-    while(int client = accept(sockListen,(struct sockaddr*)&clientaddr,sizeof(clientaddr))){                 
+    int client;
+    socklen_t addrsize;
+    while((client = accept(sockListen,(struct sockaddr*)&clientaddr, &addrsize)) != -1){                 
         printf("receive client conn %d\n\n",client);
         checkloop(client);
     }  
@@ -42,24 +44,40 @@ int main(int argv,char* args[]){
     printf("test\n");  
     return 0;  
 }  
-
+void response(int sockfd,char mode,char succ){
+    struct HEAD_RETURN returndata;
+    returndata.mode = mode;
+    returndata.succ = succ;
+    returndata.datalen = 0;
+    int n = send(sockfd,&returndata,sizeof(returndata),0);
+    if(n!=sizeof(struct HEAD_RETURN)){
+        printf("send not finish   %d/%ld\n",n,sizeof(struct HEAD_RETURN));
+    }    
+}
 void checkloop(int sockfd){
-    char* data = (char*)malloc(sizeof(struct HEAD_DATA_ALL));
-    struct HEAD_DATA_ALL* data_data = data;
-    struct HEAD_USER_ALL* data_user = data;
-    read(sockfd,&data,sizeof(data));
-    if(data.main.mode == 0){//登录注册模式
-        if(data_user->user.logmode == 0){//sign up
-            server_signup(sockfd,data_user.user);
-        }else if(data_user->user.logmode == 1){//log in
-            server_login(sockfd,data_user.user);
-        }else{// error
-            printf("mode==0  logmode==%d   error. \n",data_user->user.logmode);
+    struct HEAD_DATA_ALL data_data;
+    while(1){
+        bzero(&data_data,sizeof(data_data));
+        struct HEAD_USER_ALL* data_user = (struct HEAD_USER_ALL*)&data_data;
+        int recvlen = recv(sockfd,&data_data,sizeof(data_data),MSG_WAITALL);
+        if(recvlen!=sizeof(struct HEAD_DATA_ALL)){
+            printf("recv not finish   %d/%ld\n",recvlen,sizeof(struct HEAD_DATA_ALL));
         }
-    } else{//消息传输模式
+        print16((char*)&data_data,sizeof(data_data));
+        if(data_data.main.mode == 0){//登录注册模式
+            if(data_user->user.logmode == 0){//sign up
+                server_signup(sockfd,&(data_user->user));
+                response(sockfd,(char)0,(char)0);
+            }else if(data_user->user.logmode == 1){//log in
+                server_login(sockfd,&(data_user->user));
+                response(sockfd,(char)0,(char)0);
+            }else{// error
+                printf("mode==0  logmode==%d   error. \n",data_user->user.logmode);
+            }
+        } else{//消息传输模式
 
+        }
     }
-    free(data);
 }
 void server_signup(int sockfd,struct HEAD_USER* data){
     printf("signup:\n");

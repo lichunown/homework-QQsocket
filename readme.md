@@ -30,13 +30,15 @@ make a QQ using TCP.
 
 ### server to client
 
-| discript       | HEAD_MAIN mode | mode | size  |
-| -------------- | -------------- | ---- | ----- |
-| logout success | 1              | 0    | `num` |
-| sendata        | 1              | 1    | `num` |
-| lists          | 1              | 2    | `num` |
+| discript | mode       | succ | datalen | 
+|----------| ---------- | ---- | ---- |
+| login  | 11     |    0 or 1     | 0    |
+| signup        | 12     |    0 or 1     | 0    |
+| logout          | 21    |    0 or 1     | 0   |
+| showlist          | 22    |    0 or 1     | `len`    |
+| senddata          | 20    |    0 or 1     | `len`    |
 
-
+**succ==0 successful; succ!=0 unsuccessful**
 
 
 # build

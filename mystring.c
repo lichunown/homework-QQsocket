@@ -64,6 +64,8 @@ char** split_num(char* str,int num){
 			result[i][ii] = '\0';
 			ii = 0;
 			i++;
+		}else if(*p=='\n'){
+			
 		}else{
 			result[i][ii] = *p;
 			ii++;
