@@ -1,7 +1,6 @@
 #ifndef USER_C
 #define USER_C 0
 
-#include <vector>
 using namespace std;
 
 struct LOGINUSER{
