@@ -49,7 +49,7 @@ int main(int argv,char* args[]){
         port = atoi(args[1]);
     }
     int sockListen = CreateServer(port,10);
-    printf("listened: %d\n",port);
+    printf("listened: %d      sockfd: %d\n",port,sockListen);
     struct epoll_event event;  
     event.events = EPOLLIN;  
     event.data.fd = sockListen;  

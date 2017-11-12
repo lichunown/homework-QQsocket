@@ -14,7 +14,7 @@ struct HEAD_USER{
 }HEAD_USER;
 
 struct HEAD_DATA{
-	char token[32];
+	char token[44];
 	char datamode;
 	int datalen;
 }HEAD_DATA;
@@ -28,6 +28,12 @@ struct HEAD_DATA_ALL{
 	struct HEAD_MAIN main;
 	struct HEAD_DATA data;
 }HEAD_DATA_ALL;
+
+struct HEAD_RETURN{
+	char succ;//是否成功
+	char mode;//0登录成功；1注册成功；2退出成功；3消息发送成功
+			  //10			11			12			13
+}HEAD_RETURN;
 
 struct HEAD_USER_ALL* data_login(char* username,char* password){
 	struct HEAD_USER_ALL* data = (struct HEAD_USER_ALL*)malloc(sizeof(struct HEAD_USER_ALL));
