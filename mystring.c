@@ -2,6 +2,7 @@
 #define MYSTRING_C 0
 #include <stdlib.h>
 #include <stdio.h>
+#include <strings.h>
 
 
 #define PERSTRLENGTH 200
@@ -21,45 +22,49 @@ char** split_num(char* str,int num){
 	char** result = (char**)malloc(sizeof(char*) * num);
 	for(int i=0;i<num;i++){
 		result[i] = (char*)malloc(PERSTRLENGTH);
-		bzero(&(result[i]), PERSTRLENGTH);
+		bzero(result[i], PERSTRLENGTH);
 	}
+	// printf("bzero\n");
 	int i = 0;
 	int ii = 0;
 	char* p = str;
+	int spaces = 0;
 	while(*p != '\0'){
+		printf("%c",*p);
 		if(i>=num){
+			// printf("break too big");
 			break;
 		}
-		if(ii >= PERSTRLENGTH){
+		if(ii >= PERSTRLENGTH - 1){
 			printf("string too big");
+			result[i][ii] = '\0';
 			break;
 		}
-		if(*p == ' '){
+		if(spaces != 0 && (*p == ' ' || *p == '\t' || *p=='\n')){
+			// pass
+			// printf("   p1\n");
+		}else if(*p == ' ' || *p == '\t' || *p=='\n'){
 			result[i][ii] = '\0';
 			ii = 0;
 			i++;
-		}else if(*p=='\n'){
-
+			spaces++;
+			// printf("   p2\n");
 		}else{
 			result[i][ii] = *p;
 			ii++;
+			spaces = 0;
+			// printf("   add\n");
 		}
 		p++;
 	}
-	for(int j=i+1;j<num;j++){
-		result[j][0] = '\0';
-	}
-	result[i][ii] = '\0';
+	printf("while end\n");
 	return result;
 }
 
 void free_splitdata(char** data){
-
-	free(data[0]);
-	free(data[1]);
-	free(data);
-
+	free_splitdata_num(data,2);
 }
+
 void free_splitdata_num(char** data,int num){
 
 	for(int i=0;i<num;i++){

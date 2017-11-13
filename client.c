@@ -5,7 +5,7 @@
 #include "encode.c"
 #include <stdlib.h>
 #include <signal.h>
-	
+#include <assert.h>
 #define DEBUG true
 
 void client_login(int sockfd,char* data);
@@ -73,6 +73,7 @@ void mainWriteLoop(int sockfd){
 
 int main(int argv,char* args[]){
 	printf("HEAD_USER_ALL:%ld  HEAD_DATA_ALL:%ld",sizeof(struct HEAD_USER_ALL),sizeof(HEAD_DATA_ALL));
+	assert(sizeof(struct HEAD_USER_ALL)==sizeof(struct HEAD_DATA_ALL));
 	if(argv != 3){
 		printf("please input: `name [ip_address] [port]`\n");
 		exit(1);
