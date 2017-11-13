@@ -9,6 +9,13 @@ int main(int argc,char* argv[]){
 	// printf("split_num:\n\tstr1:`%s`\n\tstr2:`%s`\n\tstr3:`%s`\n\tstr4:`%s`",sp2[0],sp2[1],sp2[2],sp2[3]);
 	// free_splitdata(sp1);
 	// free_splitdata_num(sp2,4);
+
+	char* a = "";
+	char* change1 = ptoa(a);
+	void* change2 = (void*)atol(change1);
+	printf("point:   \t  %p\n",a);
+	printf("change1: \t  %s\n",change1);
+	printf("change2: \t  %p\n",change2);
 	while(1){
 		char inputs[80];
 		bzero(inputs,80);

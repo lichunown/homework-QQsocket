@@ -13,6 +13,9 @@ char** split_num(char* str,int num);
 void free_splitdata(char** data);
 void free_splitdata_num(char** data,int num);
 
+char* itoa(int num);
+char* ltoa(long num);
+char* ptoa(void* num);
 
 char** split(char* str){
 	return split_num(str,2);
@@ -74,36 +77,20 @@ void free_splitdata_num(char** data,int num){
 
 }
 
-unsigned long m_pow(int num,int n){
-	if(n==0)return 1;
-	unsigned long nn = num;
-	for(int i = 0;i < n-1; i++){
-		nn *= num;
-	}
-	return nn;
-}
+
 char* itoa(int num){
-	int len = 1;
-	while((num/m_pow(10,len)) > 0 )len++;
-	len++;
-	char* data = (char*)malloc(len);
+	char* data = (char*)malloc(21);
 	sprintf(data,"%d",num);
 	return data;
 }
 char* ltoa(long num){
-	long len = 1;
-	while((num/m_pow(10,len)) > 0 )len++;
-	len++;
-	char* data = (char*)malloc(len);
+	char* data = (char*)malloc(21);
 	sprintf(data,"%ld",num);
 	return data;
 }
-char* ptoa(size_t num){
-	unsigned int len = 1;
-	while((num/m_pow(10,len)) > 0 )len++;
-	len++;
-	char* data = (char*)malloc(len);
-	sprintf(data,"%ld",num);
+char* ptoa(void* num){
+	char* data = (char*)malloc(21);
+	sprintf(data,"%ld",(size_t)num);
 	return data;
 }
 #endif

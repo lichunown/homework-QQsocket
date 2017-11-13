@@ -7,7 +7,7 @@ test_sql:
 test_hash:
 	gcc -g -Wall test_hash.c -o test_hash.out -L /usr/local/lib -lglib-2.0
 client:
-	gcc -g -Wall client.c -o client.out
+	gcc -Wall client.c -o client.out
 server:
 	gcc -g -Wall server.c -o server.out -L /usr/local/lib -lglib-2.0 -lsqlite3 
 clean:

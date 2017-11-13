@@ -2,7 +2,7 @@
 #define MYSTRUCT_C 0
 #include "mysocket.c"
 
-#define TOKENSIZE 38
+#define TOKENSIZE 32
 
 struct HEAD_MAIN{
 	char mode;
@@ -13,12 +13,13 @@ struct HEAD_USER{
 	char username[16];
 	char password[16];
 	char nickname[16];
+	char _blank[6];
 }HEAD_USER;
 
 struct HEAD_DATA{
 	char token[TOKENSIZE];
 	char datamode;
-	int datalen;
+	size_t datalen;
 }HEAD_DATA;
 
 struct HEAD_USER_ALL{
@@ -34,7 +35,7 @@ struct HEAD_DATA_ALL{
 struct HEAD_RETURN{
 	char mode;
 	char succ;//是否成功
-	int datalen;
+	size_t datalen;
 }HEAD_RETURN;
 
 struct HEAD_USER_ALL* data_login(char* username,char* password){
