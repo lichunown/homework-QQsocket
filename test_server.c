@@ -51,11 +51,13 @@ int main(int argv,char* args[]){
 }  
 void response(int sockfd,char mode,char succ,void* datap,int size){
     struct HEAD_RETURN returndata;
+    bzero(&returndata,sizeof(returndata));
     returndata.mode = mode;
     returndata.succ = succ;
     returndata.datalen = size;
     Send(sockfd,&returndata,sizeof(returndata),0);  
     if(size != 0){
+        printf("size!=0:   send:%s\n",(char*)datap);
         Send(sockfd,datap,size,0);        
     }
 }
@@ -69,10 +71,8 @@ void checkloop(int sockfd){
         if(data_data.main.mode == 0){//登录注册模式
             if(data_user->user.logmode == 0){//sign up
                 server_signup(sockfd,&(data_user->user));
-                response(sockfd,(char)0,(char)0,NULL,0);
             }else if(data_user->user.logmode == 1){//log in
                 server_login(sockfd,&(data_user->user));
-                response(sockfd,(char)0,(char)0,NULL,0);
             }else{// error
                 printf("mode==0  logmode==%d   error. \n",data_user->user.logmode);
             }

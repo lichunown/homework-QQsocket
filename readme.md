@@ -24,9 +24,9 @@ make a QQ using TCP.
 
 | discript | HEAD_MAIN mode | token   | HEAD_DATA datamode | int datalen |
 | -------- | -------------- | ------- | ------------------ | ----------- |
-| logout   | 0              | `token` | 0                  | `num`       |
-| senddata | 0              | `token` | 1                  | `num`       |
-| showlist | 0              | `token` | 2                  | `num`       |
+| logout   | 0              | `token` | 0                  | `len`       |
+| senddata | 0              | `token` | 1                  | `len`       |
+| showlist | 0              | `token` | 2                  | `len`       |
 
 ### server to client
 
@@ -119,4 +119,6 @@ sql_all(sqlite3* db,char*** data,int* row,int* col);
 ```
 # TODO
 
-turn to use glib.
+### bug
+
+- when use `#login` in client. response could receive nickname & token.but only token can read. 

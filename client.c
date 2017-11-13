@@ -47,12 +47,11 @@ void mainReadLoop(int sockfd){
 	}
 }
 void checkresponse(int sockfd, struct HEAD_RETURN* receiveHead){
-	void* data;
+	void* data = NULL;
 	if(receiveHead->datalen != 0){
 		data = malloc(receiveHead->datalen);
 		Recv(sockfd,data,receiveHead->datalen,MSG_WAITALL);
-		printf("%s",(char*)data);
-		free(data);
+		printf("recv str:`%s`\n",(char*)data);
 	}
 	if(receiveHead->succ==0){
 		printf("[message] cmd succ\n");
@@ -64,6 +63,7 @@ void checkresponse(int sockfd, struct HEAD_RETURN* receiveHead){
 	}else {
 
 	}
+	if(data != NULL)free(data);
 }
 void login_ok(struct server_login_return* data){
 	printf("login successful\n");
