@@ -12,6 +12,8 @@
 #include <pthread.h>
 #include <sys/select.h>
 #include <string.h>
+
+#include "encode.c"
 int Socket(int domain, int type, int protocol){
 	int sockfd = socket(domain,type,protocol);
 	if(sockfd==-1){
@@ -74,4 +76,24 @@ int CreateServer(int port,int backlog){
 	Listen(sockfd,backlog);
 	return sockfd;
 }
+
+ssize_t Send(int sockfd, const void *buf, size_t len, int flags){
+	printf("sending:\n");
+	print16((char*)buf,len);
+	printf("\n\n");
+	ssize_t n = send(sockfd,buf,len,flags);
+	if(n!=len)printf("send not finish.\t %ld/%ld\n",n,len);
+	return n;
+}
+
+
+ssize_t Recv(int sockfd, void *buf, size_t len, int flags){
+	ssize_t n = recv(sockfd,buf,len,flags);
+	printf("recving:\n");
+	print16((char*)buf,n);
+	printf("\n\n");	
+	if(n!=len)printf("send not finish.\t %ld/%ld\n",n,len);
+	return n;
+}
+
 #endif

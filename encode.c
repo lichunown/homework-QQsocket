@@ -10,6 +10,8 @@ char* createToken(int len){
 	char* data = (char*)malloc(len);
 	for(int i=0;i<len-1;i++){	
 		data[i] = (char)(rand()%64+48);
+		if(data[i]>57)data[i] += 65-57;
+		if(data[i]>90)data[i] += 97-90;
 	}
 	data[len-1] = '\0';
 	return data;

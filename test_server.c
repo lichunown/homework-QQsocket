@@ -13,10 +13,13 @@ void checkloop(int sockfd);
 void server_signup(int sockfd,struct HEAD_USER* data);
 void server_login(int sockfd,struct HEAD_USER* data);
 
-GHashTable* UserTable = NULL;
-GHashTable* UserDataTable = NULL;
-GHashTable* TokenTable = NULL;
-GHashTable* EventTable = NULL;
+GHashTable* UserTable = NULL;    // username  ->  event
+GHashTable* UserDataTable = NULL;// username  ->  nickname
+GHashTable* TokenTable = NULL;   // token     ->  username
+GHashTable* EventTable = NULL;   // sockfd    ->  event*
+
+GHashTable* SockTable = NULL;    // username  ->  socket
+
 sqlite3* db = NULL;
 
 int main(int argv,char* args[]){   
@@ -28,7 +31,7 @@ int main(int argv,char* args[]){
     UserDataTable = g_hash_table_new(g_str_hash, g_str_equal);// username -> nickname
     TokenTable = g_hash_table_new(g_str_hash, g_str_equal); //token -> username
     EventTable = g_hash_table_new(g_str_hash, g_str_equal); //sockfd -> event*
-
+    SockTable = g_hash_table_new(g_str_hash, g_str_equal); // username  ->  socket
  
     if(argv == 2){
         port = atoi(args[1]);
@@ -51,15 +54,9 @@ void response(int sockfd,char mode,char succ,void* datap,int size){
     returndata.mode = mode;
     returndata.succ = succ;
     returndata.datalen = size;
-    int n = send(sockfd,&returndata,sizeof(returndata),0);
-    if(n!=sizeof(struct HEAD_RETURN)){
-        printf("send not finish   %d/%ld\n",n,sizeof(struct HEAD_RETURN));
-    }    
+    Send(sockfd,&returndata,sizeof(returndata),0);  
     if(size != 0){
-        n = send(sockfd,datap,size,0);
-        if(n!=sizeof(struct HEAD_RETURN)){
-            printf("send not finish   %d/%d\n",n,size);
-        }           
+        Send(sockfd,datap,size,0);        
     }
 }
 void checkloop(int sockfd){
@@ -67,10 +64,7 @@ void checkloop(int sockfd){
     while(1){
         bzero(&data_data,sizeof(data_data));
         struct HEAD_USER_ALL* data_user = (struct HEAD_USER_ALL*)&data_data;
-        int recvlen = recv(sockfd,&data_data,sizeof(data_data),MSG_WAITALL);
-        if(recvlen!=sizeof(struct HEAD_DATA_ALL)){
-            printf("recv not finish   %d/%ld\n",recvlen,sizeof(struct HEAD_DATA_ALL));
-        }
+        Recv(sockfd,&data_data,sizeof(data_data),MSG_WAITALL);
         print16((char*)&data_data,sizeof(data_data));
         if(data_data.main.mode == 0){//登录注册模式
             if(data_user->user.logmode == 0){//sign up
@@ -96,13 +90,24 @@ void server_signup(int sockfd,struct HEAD_USER* data){
         response(sockfd,12,1,NULL,0);
     }
 }
+
+
 void server_login(int sockfd,struct HEAD_USER* data){
     printf("login:\n");
     printf("username:`%s` password:`%s`\n",data->username,data->password);
     char* nickname;
     if(sql_login(db,data->username,data->password,&nickname)){
-        response(sockfd,11,0,nickname,16);
+        g_hash_table_insert(SockTable, data->username, itoa(sockfd));
+        g_hash_table_insert(UserDataTable, data->username, nickname);
+        char* token = createToken(32);
+        g_hash_table_insert(TokenTable, token, data->username);
+        struct server_login_return rdata;
+        bzero(&rdata,sizeof(rdata));
+        strcpy(rdata.nickname,data->username);
+        strcpy(rdata.token,token);
+        response(sockfd,11,0,&rdata,sizeof(rdata));
         free(nickname);
+        free(token);
     }else{
         response(sockfd,11,1,NULL,0);
     }

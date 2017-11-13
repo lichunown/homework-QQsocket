@@ -13,6 +13,11 @@ void client_signup(int sockfd,char* data);
 void client_logout(int sockfd,char* data);
 void client_sendto(int sockfd,char* data);
 
+void mainReadLoop(int sockfd);
+void mainWriteLoop(int sockfd);
+
+void checkresponse(int sockfd, struct HEAD_RETURN* receiveHead);
+void login_ok(struct server_login_return* data);
 
 void checkcmd(int sockfd,char** splitdata){
 	printf("cmd: `%s`\n",splitdata[0]);
@@ -37,30 +42,40 @@ void mainReadLoop(int sockfd){
 	struct HEAD_RETURN receiveHead;
 	while(1){
 		bzero(&receiveHead,sizeof(receiveHead));
-		int recvlen = recv(sockfd,&receiveHead,sizeof(receiveHead),MSG_WAITALL);
-		if(recvlen != sizeof(struct HEAD_RETURN)){
-			printf("recv not finish.  send:%d/%ld\n",recvlen,sizeof(struct HEAD_RETURN));
-			continue;
-		}		
-		if(receiveHead.succ==0){
-			printf("succ\n");
-		}else{
-			printf("fail\n");
-		}
-		if(receiveHead.datalen != 0){
-			void* data = malloc(receiveHead.datalen);
-			recv(sockfd,data,receiveHead.datalen,MSG_WAITALL);
-			printf("%s",(char*)data);
-			free(data);
-		}
+		Recv(sockfd,&receiveHead,sizeof(receiveHead),MSG_WAITALL);
+		checkresponse(sockfd,&receiveHead);
 	}
+}
+void checkresponse(int sockfd, struct HEAD_RETURN* receiveHead){
+	void* data;
+	if(receiveHead->datalen != 0){
+		data = malloc(receiveHead->datalen);
+		Recv(sockfd,data,receiveHead->datalen,MSG_WAITALL);
+		printf("%s",(char*)data);
+		free(data);
+	}
+	if(receiveHead->succ==0){
+		printf("[message] cmd succ\n");
+	}else{
+		printf("[message] cmd fail\n");
+	}if(receiveHead->mode == 11 && receiveHead->succ == 0){
+		assert(receiveHead->datalen == sizeof(server_login_return));
+		login_ok(data);
+	}else {
+
+	}
+}
+void login_ok(struct server_login_return* data){
+	printf("login successful\n");
+	printf("\t nickname: `%s`\n",data->nickname);
+	printf("\t    token: `%s`\n",data->token);
 }
 
 void mainWriteLoop(int sockfd){
 	char input[1024];
 	puts("");
 	while(1){
-		fputs(">>>",stdout);
+		// fputs(">>>",stdout);
 		fgets(input,sizeof(input),stdin);
 		printf("you input: %s\n",input);
 		char** splitdata = split(input);
@@ -100,11 +115,7 @@ void client_signup(int sockfd,char* data){
 	char* nickname = uandp[2];
 	printf("you input username:%s password:%s nickname:%s\n",username,password,nickname);
 	struct HEAD_USER_ALL* senddata = data_signup(username,password,nickname);
-	#ifdef DEBUG
-	printf("[sending]:\n");
-	print16((char*)senddata,sizeof(struct HEAD_USER_ALL));
-	#endif
-	send(sockfd,senddata,sizeof(struct HEAD_USER_ALL),0);
+	Send(sockfd,senddata,sizeof(struct HEAD_USER_ALL),0);
 	free(senddata);
 	free_splitdata_num(uandp,3);
 }
@@ -114,14 +125,7 @@ void client_login(int sockfd,char* data){// TODO
 	char* password = uandp[1];
 	printf("you input username:%s password:%s\n",username,password);
 	struct HEAD_USER_ALL* senddata = data_login(username,password);
-	#ifdef DEBUG
-	printf("[sending]:\n");
-	print16((char*)senddata,sizeof(struct HEAD_USER_ALL));
-	#endif
-	int sendlen = send(sockfd,senddata,sizeof(struct HEAD_USER_ALL),0);
-	if(sendlen != sizeof(struct HEAD_USER_ALL)){
-		printf("send not finish.  send:%d/%ld\n",sendlen,sizeof(struct HEAD_USER_ALL));
-	}
+	Send(sockfd,senddata,sizeof(struct HEAD_USER_ALL),0);
 	free(senddata);
 	free_splitdata(uandp);
 }

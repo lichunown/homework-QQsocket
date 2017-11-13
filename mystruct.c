@@ -39,6 +39,14 @@ struct HEAD_RETURN{
 	size_t datalen;
 }HEAD_RETURN;
 
+struct server_login_return{
+    char nickname[16];
+    char token[32];
+}server_login_return;
+
+
+
+
 struct HEAD_USER_ALL* data_login(char* username,char* password){
 	struct HEAD_USER_ALL* data = (struct HEAD_USER_ALL*)malloc(sizeof(struct HEAD_USER_ALL));
 	bzero(data,sizeof(struct HEAD_USER_ALL));
