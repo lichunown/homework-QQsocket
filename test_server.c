@@ -46,15 +46,21 @@ int main(int argv,char* args[]){
     printf("test\n");  
     return 0;  
 }  
-void response(int sockfd,char mode,char succ){
+void response(int sockfd,char mode,char succ,void* datap,int size){
     struct HEAD_RETURN returndata;
     returndata.mode = mode;
     returndata.succ = succ;
-    returndata.datalen = 0;
+    returndata.datalen = size;
     int n = send(sockfd,&returndata,sizeof(returndata),0);
     if(n!=sizeof(struct HEAD_RETURN)){
         printf("send not finish   %d/%ld\n",n,sizeof(struct HEAD_RETURN));
     }    
+    if(size != 0){
+        n = send(sockfd,datap,size,0);
+        if(n!=sizeof(struct HEAD_RETURN)){
+            printf("send not finish   %d/%d\n",n,size);
+        }           
+    }
 }
 void checkloop(int sockfd){
     struct HEAD_DATA_ALL data_data;
@@ -69,10 +75,10 @@ void checkloop(int sockfd){
         if(data_data.main.mode == 0){//登录注册模式
             if(data_user->user.logmode == 0){//sign up
                 server_signup(sockfd,&(data_user->user));
-                response(sockfd,(char)0,(char)0);
+                response(sockfd,(char)0,(char)0,NULL,0);
             }else if(data_user->user.logmode == 1){//log in
                 server_login(sockfd,&(data_user->user));
-                response(sockfd,(char)0,(char)0);
+                response(sockfd,(char)0,(char)0,NULL,0);
             }else{// error
                 printf("mode==0  logmode==%d   error. \n",data_user->user.logmode);
             }
@@ -84,12 +90,22 @@ void checkloop(int sockfd){
 void server_signup(int sockfd,struct HEAD_USER* data){
     printf("signup:\n");
     printf("username:`%s` password:`%s` nickname:`%s`\n",data->username,data->password,data->nickname);
-    /**********/
+    if(sql_createUser(db,data->username,data->password,data->nickname)){
+        response(sockfd,12,0,NULL,0);
+    }else{
+        response(sockfd,12,1,NULL,0);
+    }
 }
 void server_login(int sockfd,struct HEAD_USER* data){
     printf("login:\n");
     printf("username:`%s` password:`%s`\n",data->username,data->password);
-    /**********/
+    char* nickname;
+    if(sql_login(db,data->username,data->password,&nickname)){
+        response(sockfd,11,0,nickname,16);
+        free(nickname);
+    }else{
+        response(sockfd,11,1,NULL,0);
+    }
 }
 
 
