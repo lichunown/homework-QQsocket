@@ -11,8 +11,14 @@
 
 #define DATABASENAME "data.sqlite3"
 
-
-
+int Sqlite3_open(char* name,sqlite3** db);// open database
+sqlite3* createDatabase(sqlite3* db);// create new database
+sqlite3* databaseInit();//auto open or create database
+int sql_createUser(sqlite3* db,char* username,char* password,char* nickname);
+int sql_login(sqlite3* db,char* username,char* password,char** gettingnick);
+int sql_changeNickname(sqlite3* db,char* username,char* newnickname);
+int sql_all(sqlite3* db,char*** data,int* row,int* col);
+// sql_all(db,NULL,NULL,NULL); auto printf database data;
 int Sqlite3_open(char* name,sqlite3** db){
 	int r = sqlite3_open(name, db);
 	if(r){
