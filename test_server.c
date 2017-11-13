@@ -8,7 +8,7 @@
 #include <sys/epoll.h>  
 #include <glib.h>
 #include <stdlib.h>
-
+#include <assert.h>
 void checkloop(int sockfd);
 void server_signup(int sockfd,struct HEAD_USER* data);
 void server_login(int sockfd,struct HEAD_USER* data);

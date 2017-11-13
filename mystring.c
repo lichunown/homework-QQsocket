@@ -33,9 +33,26 @@ char** split_num(char* str,int num){
 	char* p = str;
 	int spaces = 0;
 	while(*p != '\0'){
-		printf("%c",*p);
+		// printf("%c",*p);
 		if(i>=num){
 			// printf("break too big");
+			break;
+		}
+		if(i==num-1 && spaces == 0){
+			while(*p != '\0'){
+				if(ii >= PERSTRLENGTH - 1){
+					result[i][ii] = '\0';
+					break;
+				}
+				result[i][ii] = *p;
+				p++;
+				ii++;
+			}
+			if(result[i][ii-1]=='\n'){
+				result[i][ii-1] = '\0';
+			}else{
+				result[i][ii] = '\0';
+			}
 			break;
 		}
 		if(ii >= PERSTRLENGTH - 1){
@@ -60,7 +77,7 @@ char** split_num(char* str,int num){
 		}
 		p++;
 	}
-	printf("while end\n");
+	// printf("while end\n");
 	return result;
 }
 
