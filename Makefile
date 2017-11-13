@@ -11,9 +11,10 @@ client:
 server:
 	gcc -g -Wall server.c -o server.out -L /usr/local/lib -lglib-2.0 -lsqlite3 
 clean:
-	rm -f test_sql client.out *.out test_hash test_mystring
+	rm -f *.out 
 default:
-	client server
+	make client
+	make server
 test:
 	make test_server 
 	make test_mystring 
@@ -22,3 +23,6 @@ test:
 test_s:
 	make test_server 
 	make client
+all:
+	make test
+	make 
