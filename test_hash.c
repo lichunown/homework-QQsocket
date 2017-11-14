@@ -3,21 +3,35 @@
 #include <stdio.h>
 #include "mystring.c"
 //EventTable = NULL;
-int main(){
-	printf("%s",ptoa((void*)94827128201452));
-	printf("-----------\n");
-	GHashTable* EventTable = g_hash_table_new(g_str_hash, g_str_equal);
-	char* data = "tttttt";
-	int *d = malloc(4);
-	unsigned long a;size_t b; int c;
-	printf("-----------\n");
-	printf("unsigned long:%ld  size_t:%ld int:%ld pointer:%ld",sizeof(a),sizeof(b),sizeof(c),sizeof(d));
-	printf("\n`%ld`\n",(unsigned long)data);
-	printf("`%s`",ptoa((void*)data));
-	printf("-----------\n");
-	g_hash_table_insert(EventTable, ptoa((void*)data), data);
-	char* r = (char*)g_hash_table_lookup(EventTable, ptoa((void*)data));
-	printf("%s",r);
 
+void print_key_value(gpointer key, gpointer value, gpointer user_data)
+{
+    printf("%s ---> %s\n", (char*)key, (char*)value);
+}
+
+void display_hash_table(GHashTable *table)
+{
+    g_hash_table_foreach(table, print_key_value, NULL);
+    printf("\n");
+}
+
+
+int main(){
+	GHashTable* Table = g_hash_table_new_full(g_str_hash, g_str_equal,g_free,g_free);
+	for(int i=0;i<10;i++){
+		char* data = malloc(20);
+		char* id = malloc(20);
+		sprintf(id,"id%d",i);
+		sprintf(data,"outdata%d",i);		
+		g_hash_table_insert(Table,id,data);
+		//free(data);
+		//free(id);
+	}
+	display_hash_table(Table);
+	void* n = g_hash_table_lookup(Table, "id2");
+	printf("found %s\n",(char*)n);
+	g_hash_table_remove(Table, "id2");
+	display_hash_table(Table);
+	display_hash_table(Table);
 	return 0;
 }

@@ -159,6 +159,8 @@ int sql_all(sqlite3* db,char*** data,int* row,int* col);
 
 - 密码加密算法
 
+- pthread 使用多线程的理由: 线程间方便的**通信机制**
+
 ## bug
 
 - when use `#login` in client. response could receive nickname & token.but only token can read. 
