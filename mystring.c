@@ -10,8 +10,8 @@
 
 char** split(char* str); // 分割字符串为2段
 char** split_num(char* str,int num);//分割字符串为num段
-void free_splitdata(char** data);
-void free_splitdata_num(char** data,int num);
+void free_splitdata(char** data);// 释放分割字符串空间
+void free_splitdata_num(char** data,int num);// 释放分割字符串空间
 
 char* itoa(int num);
 char* ltoa(long num);
