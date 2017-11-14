@@ -9,30 +9,37 @@
 #include <glib.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <unistd.h>  
+#include <fcntl.h>  
+#include <limits.h>  
+#include <sys/stat.h>  
+
 void checkloop(int sockfd);
 void server_signup(int sockfd,struct HEAD_USER* data);
 void server_login(int sockfd,struct HEAD_USER* data);
 
-GHashTable* UserTable = NULL;    // username  ->  event
-GHashTable* UserDataTable = NULL;// username  ->  nickname
-GHashTable* TokenTable = NULL;   // token     ->  username
-GHashTable* EventTable = NULL;   // sockfd    ->  event*
+int sendto_by_Token(char* token,void* data,size_t len);
+int sendto_by_User(char* username,void* data,size_t len);
+int sendto_by_sockfd(int sockfd,void* data,size_t len);
 
-GHashTable* SockTable = NULL;    // username  ->  socket
+GHashTable* User2Sock = NULL;    // username  ->  socket
+GHashTable* Sock2Fifo = NULL;    // socket    ->  fifo
+GHashTable* Token2User = NULL;   // token     ->  username
+GHashTable* User2Nick = NULL;    // username  ->  nickname
 
 sqlite3* db = NULL;
 
-int main(int argv,char* args[]){   
-    printf("HEAD_USER_ALL:%ld  HEAD_DATA_ALL:%ld",sizeof(struct HEAD_USER_ALL),sizeof(HEAD_DATA_ALL));
+void Init(){
     assert(sizeof(struct HEAD_USER_ALL)==sizeof(struct HEAD_DATA_ALL));
     db = databaseInit();
+    User2Sock = g_hash_table_new(g_str_hash, g_str_equal);
+    Sock2Fifo = g_hash_table_new(g_str_hash, g_str_equal);
+    Token2User = g_hash_table_new(g_str_hash, g_str_equal); 
+    User2Nick = g_hash_table_new(g_str_hash, g_str_equal); 
+}
+int main(int argv,char* args[]){   
+    Init();
     int port = 8001;
-    UserTable = g_hash_table_new(g_str_hash, g_str_equal);//username -> event
-    UserDataTable = g_hash_table_new(g_str_hash, g_str_equal);// username -> nickname
-    TokenTable = g_hash_table_new(g_str_hash, g_str_equal); //token -> username
-    EventTable = g_hash_table_new(g_str_hash, g_str_equal); //sockfd -> event*
-    SockTable = g_hash_table_new(g_str_hash, g_str_equal); // username  ->  socket
- 
     if(argv == 2){
         port = atoi(args[1]);
     }
@@ -41,9 +48,20 @@ int main(int argv,char* args[]){
     struct sockaddr_in clientaddr;
     int client;
     socklen_t addrsize;
-    while((client = accept(sockListen,(struct sockaddr*)&clientaddr, &addrsize)) != -1){                 
-        printf("receive client conn %d\n\n",client);
-        checkloop(client);
+    while(1){    
+        client = accept(sockListen,(struct sockaddr*)&clientaddr, &addrsize);
+        if(client != -1){
+            printf("receive client conn %d\n\n",client);
+            int pid = fork();
+            if(pid==0){
+                close(sockListen);
+                checkloop(client);
+            }else{
+                close(client);
+            }
+        } else{
+            printf("receive client conn error.\n");
+        }            
     }  
     close(sockListen);  
     printf("test\n");  
@@ -55,32 +73,84 @@ void response(int sockfd,char mode,char succ,void* datap,int size){
     returndata.mode = mode;
     returndata.succ = succ;
     returndata.datalen = size;
-    Send(sockfd,&returndata,sizeof(returndata),0);  
+    //Send(sockfd,&returndata,sizeof(returndata),0);  
+    sendto_by_sockfd(sockfd,&returndata,sizeof(returndata));
     if(size != 0){
         printf("size!=0:   send:%s\n",(char*)datap);
-        Send(sockfd,datap,size,0);        
+        //Send(sockfd,datap,size,0);
+        sendto_by_sockfd(sockfd,datap,size);  
     }
 }
 void checkloop(int sockfd){
-    struct HEAD_DATA_ALL data_data;
-    while(1){
-        bzero(&data_data,sizeof(data_data));
-        struct HEAD_USER_ALL* data_user = (struct HEAD_USER_ALL*)&data_data;
-        Recv(sockfd,&data_data,sizeof(data_data),MSG_WAITALL);
-        print16((char*)&data_data,sizeof(data_data));
-        if(data_data.main.mode == 0){//登录注册模式
-            if(data_user->user.logmode == 0){//sign up
-                server_signup(sockfd,&(data_user->user));
-            }else if(data_user->user.logmode == 1){//log in
-                server_login(sockfd,&(data_user->user));
-            }else{// error
-                printf("mode==0  logmode==%d   error. \n",data_user->user.logmode);
-            }
-        } else{//消息传输模式
+    int pid = fork();
+    if(pid==0){ //read & change
+        struct HEAD_DATA_ALL data_data;
+        while(1){
+            bzero(&data_data,sizeof(data_data));
+            struct HEAD_USER_ALL* data_user = (struct HEAD_USER_ALL*)&data_data;
+            Recv(sockfd,&data_data,sizeof(data_data),MSG_WAITALL);
+            print16((char*)&data_data,sizeof(data_data));
+            if(data_data.main.mode == 0){//登录注册模式
+                if(data_user->user.logmode == 0){//sign up
+                    server_signup(sockfd,&(data_user->user));
+                }else if(data_user->user.logmode == 1){//log in
+                    server_login(sockfd,&(data_user->user));
+                }else{// error
+                    printf("mode==0  logmode==%d   error. \n",data_user->user.logmode);
+                }
+            } else{//消息传输模式
 
+            }
+        }
+    }else{ // write to client
+        char fifo_name[50];
+        sprintf(fifo_name,"my_server_fifo_%d",sockfd);
+        if(access(fifo_name, F_OK) == -1){  //管道文件不存在  
+            int res = mkfifo(fifo_name, 0777);  
+            if(res != 0){  
+                fprintf(stderr, "Could not create fifo %s\n", fifo_name);  
+                exit(EXIT_FAILURE);  
+            }  
+        }
+        int read_fd = open(fifo_name, O_RDONLY);
+        char* sockfd_s = itoa(sockfd);
+        g_hash_table_insert(Sock2Fifo, sockfd_s, fifo_name);
+        while(1){
+            struct HEAD_SEND_BY_FIFO data;
+            read(read_fd, &data, sizeof(struct HEAD_SEND_BY_FIFO));
+            void* senddata = malloc(data.len);
+            read(read_fd, &senddata,data.len);
+            Send(sockfd, &senddata, data.len, 0);
+            free(senddata);
         }
     }
 }
+
+int sendto_by_Token(char* token,void* data,size_t len){
+    char* username = g_hash_table_lookup(Token2User,token);
+    if(username==NULL)return -1;
+    return sendto_by_User(username,data,len);
+}
+int sendto_by_User(char* username,void* data,size_t len){
+    char* sockfd_s = g_hash_table_lookup(User2Sock,username);
+    if(sockfd_s == NULL)return -1;
+    int sockfd = atoi(sockfd_s);
+    return sendto_by_sockfd(sockfd,data,len);
+}
+
+int sendto_by_sockfd(int sockfd,void* data,size_t len){
+    char* sockfd_s = itoa(sockfd);
+    char* fifo_name = g_hash_table_lookup(Sock2Fifo,sockfd_s);
+    if(fifo_name==NULL)return -1;
+    free(sockfd_s);
+    int write_fd = open(fifo_name, O_WRONLY);
+    struct HEAD_SEND_BY_FIFO datahead;
+    datahead.len = len;
+    write(write_fd,&datahead,sizeof(struct HEAD_SEND_BY_FIFO));
+    return write(write_fd,data,len);
+}
+
+
 void server_signup(int sockfd,struct HEAD_USER* data){
     printf("signup:\n");
     printf("username:`%s` password:`%s` nickname:`%s`\n",data->username,data->password,data->nickname);
@@ -97,10 +167,10 @@ void server_login(int sockfd,struct HEAD_USER* data){
     printf("username:`%s` password:`%s`\n",data->username,data->password);
     char* nickname;
     if(sql_login(db,data->username,data->password,&nickname)){
-        g_hash_table_insert(SockTable, data->username, itoa(sockfd));
-        g_hash_table_insert(UserDataTable, data->username, nickname);
+        g_hash_table_insert(User2Sock, data->username, itoa(sockfd));
+        g_hash_table_insert(User2Nick, data->username, nickname);
         char* token = createToken(32);
-        g_hash_table_insert(TokenTable, token, data->username);
+        g_hash_table_insert(Token2User, token, data->username);
         struct server_login_return rdata;
         bzero(&rdata,sizeof(rdata));
         strcpy(rdata.nickname,data->username);

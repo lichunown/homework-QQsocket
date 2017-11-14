@@ -31,6 +31,7 @@ GHashTable* UserTable = NULL;
 GHashTable* UserDataTable = NULL;
 GHashTable* TokenTable = NULL;
 GHashTable* EventTable = NULL;
+
 sqlite3* db = NULL;
 
 int main(int argv,char* args[]){   

@@ -16,8 +16,44 @@ void client_sendto(int sockfd,char* data);
 void mainReadLoop(int sockfd);
 void mainWriteLoop(int sockfd);
 
+void checkcmd(int sockfd,char** splitdata);
+
+
 void checkresponse(int sockfd, struct HEAD_RETURN* receiveHead);
 void login_ok(struct server_login_return* data);
+
+int LOGINSTATUS = 0;
+char* TOKEN = NULL;
+char* USERNAME = NULL;
+char* NICKNAME = NULL;
+
+int main(int argv,char* args[]){
+	TOKEN = (char*)malloc(TOKENSIZE);
+	USERNAME = (char*)malloc(16);
+	NICKNAME = (char*)malloc(16);
+
+	printf("HEAD_USER_ALL:%ld  HEAD_DATA_ALL:%ld\n",sizeof(struct HEAD_USER_ALL),sizeof(struct HEAD_DATA_ALL));
+	assert(sizeof(struct HEAD_USER_ALL)==sizeof(struct HEAD_DATA_ALL));
+	if(argv != 3){
+		printf("please input: `name [ip_address] [port]`\n");
+		exit(1);
+	}
+	printf("you input  [IP]:%s  [PORT]:%s\n",args[1],args[2]);
+	int port = atoi(args[2]);
+	int sockfd = CreateClient(args[1],port);
+	if(sockfd){
+		printf("[message]: Connected %s:%s\n\n",args[1],args[2]);
+	}
+	int pid = fork();
+	if(pid==0){// read
+		mainReadLoop(sockfd);
+	}else{// write
+		mainWriteLoop(sockfd);		
+	}
+	return 0;
+}
+
+
 
 void checkcmd(int sockfd,char** splitdata){
 	printf("cmd: `%s`\n",splitdata[0]);
@@ -67,6 +103,12 @@ void checkresponse(int sockfd, struct HEAD_RETURN* receiveHead){
 }
 void login_ok(struct server_login_return* data){
 	printf("login successful\n");
+	// printf("log_ok function:\n");
+	// print16((char*)data,sizeof(struct server_login_return));
+	// printf("\n");sta
+	LOGINSTATUS = 1;
+	memcpy(TOKEN,data->token,TOKENSIZE);
+	strcpy(NICKNAME,data->nickname);
 	printf("\t nickname: `%s`\n",data->nickname);
 	printf("\t    token: `%s`\n",data->token);
 }
@@ -84,30 +126,6 @@ void mainWriteLoop(int sockfd){
 		bzero(input,1024);
 	}
 }
-
-
-int main(int argv,char* args[]){
-	printf("HEAD_USER_ALL:%ld  HEAD_DATA_ALL:%ld\n",sizeof(struct HEAD_USER_ALL),sizeof(struct HEAD_DATA_ALL));
-	assert(sizeof(struct HEAD_USER_ALL)==sizeof(struct HEAD_DATA_ALL));
-	if(argv != 3){
-		printf("please input: `name [ip_address] [port]`\n");
-		exit(1);
-	}
-	printf("you input  [IP]:%s  [PORT]:%s\n",args[1],args[2]);
-	int port = atoi(args[2]);
-	int sockfd = CreateClient(args[1],port);
-	if(sockfd){
-		printf("[message]: Connected %s:%s\n\n",args[1],args[2]);
-	}
-	int pid = fork();
-	if(pid==0){// read
-		mainReadLoop(sockfd);
-	}else{// write
-		mainWriteLoop(sockfd);		
-	}
-	return 0;
-}
-
 void client_signup(int sockfd,char* data){
 	char** uandp = split_num(data,3);
 	char* username = uandp[0];

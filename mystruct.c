@@ -39,6 +39,10 @@ struct HEAD_RETURN{
 	size_t datalen;
 }HEAD_RETURN;
 
+struct HEAD_SEND_BY_FIFO{
+	size_t len;
+}HEAD_SEND_BY_FIFO;
+
 struct server_login_return{
     char nickname[16];
     char token[32];
