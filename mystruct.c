@@ -59,7 +59,7 @@ struct client_to_server_send_to_user_head{
 struct server_to_client_send_to_user_head{
 	char username[16];
 	int len;
-}client_to_server_send_to_user_head;
+}server_to_client_send_to_user_head;
 // struct HEAD_SEND_BY_FIFO{
 // 	size_t len;
 // }HEAD_SEND_BY_FIFO;

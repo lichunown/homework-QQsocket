@@ -211,20 +211,29 @@ void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data){
 	if(data->datamode==0){//logout
 		struct HEAD_RETURN returndata;
 		bzero(&returndata,sizeof(returndata));
-		g_hash_table_delete(User2Sock, username);
-		g_hash_table_delete(User2Nick, username);
-		g_hash_table_delete(Token2User, data->token);
+		g_hash_table_remove(User2Sock, username);
+		g_hash_table_remove(User2Nick, username);
+		g_hash_table_remove(Token2User, data->token);
 		returndata.mode = 21;
 		returndata.succ = 0;
 		returndata.datalen = 0;
 		SendToFd(epollfd, sockfd, &returndata,sizeof(returndata));		
 	}else if(data->datamode==1){//send data
 		struct client_to_server_send_to_user_head senddata_head;
-		Recv(sockfd,senddata_head,sizeof(struct client_to_server_send_to_user_head),MSG_WAITALL);
+		Recv(sockfd,&senddata_head,sizeof(senddata_head),MSG_WAITALL);
 		void* senddata = malloc(senddata_head.len);
 		Recv(sockfd,senddata,senddata_head.len,MSG_WAITALL);
 
-		user2sockfd = g_hash_table_lookup(User2Sock, senddata_head);
+		char* s_user2sockfd = g_hash_table_lookup(User2Sock, senddata_head.username);
+		if(s_user2sockfd==NULL){
+			struct HEAD_RETURN sendtouser1;
+			bzero(&sendtouser1,sizeof(sendtouser1));
+			sendtouser1.mode = 20;
+			sendtouser1.succ = 1;
+			SendToFd(epollfd, sockfd, &sendtouser1, sizeof(sendtouser1));
+			return;			
+		}
+		int user2sockfd = atoi(s_user2sockfd);
 		/************/
 		struct HEAD_RETURN user2head;
 		struct server_to_client_send_to_user_head user2data_head;
@@ -233,9 +242,9 @@ void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data){
 		user2head.mode = 99;
 		user2head.succ = 0;
 		user2head.datalen = sizeof(user2data_head)+senddata_head.len;
-		SendToFd(epollfd, sockfd, &user2head,sizeof(user2head));
-		SendToFd(epollfd, sockfd, &user2data_head, sizeof(user2data_head));
-		SendToFd(epollfd, sockfd, senddata, senddata_head.len);
+		SendToFd(epollfd, user2sockfd, &user2head,sizeof(user2head));
+		SendToFd(epollfd, user2sockfd, &user2data_head, sizeof(user2data_head));
+		SendToFd(epollfd, user2sockfd, senddata, senddata_head.len);
 		struct HEAD_RETURN sendtouser1;
 		bzero(&sendtouser1,sizeof(sendtouser1));
 		sendtouser1.mode = 20;
