@@ -32,6 +32,17 @@
 | senddata（向某一用户发送消息） | 0              | `token` | 1                  | `len`       |
 | showlist（显示在线用户）    | 0              | `token` | 2                  | 0           |
 
+#### 客户端到服务器附加数据
+
+- senddata（向某一用户发送消息）
+
+`struct client_to_server_send_to_user_head`
+| discript  | 结构体属性    | 大小   |
+| --------- | -------- | ---- |
+| direction user   | username | 16   |
+| data len | len    | int   |
+| data  | ???    | ???  |
+
 ### 服务器到客户端
 
 `struct HEAD_RETURN`
@@ -53,6 +64,7 @@
 | --------- | -------- | ---- |
 | 登录用户的昵称   | nickname | 16   |
 | 标识用户身份的令牌 | token    | 32   |
+
 
 # build
 

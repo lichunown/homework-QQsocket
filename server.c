@@ -65,7 +65,7 @@ int main(int argv,char* args[]){
         printf("epoll add fail : fd = %d\n", sockListen);  
         return -1;  
     }  
-    for(int i=0;i<10;i++){                 
+    for(;;){                 
         printf("start epoll....\n");
         int ret = epoll_wait(epollfd, eventList, MAX_EVENTS, timeout);  
         if(ret < 0){  
@@ -128,7 +128,8 @@ void RecvData(int epollfd, int fd){
 		Recv(fd,&data, sizeof(data),MSG_WAITALL);
 		dataDataProcess(epollfd,fd,&data);
 	}else{
-		printf("\tdata error\n");
+		printf("\tdata error or This is a test string\n");
+		SendToFd(epollfd,fd,"This is an echo.\n",sizeof("This is an echo.\n"));
 	}
 	printf("End recving\n\n");
 }  
@@ -159,18 +160,17 @@ void userDataProcess(int epollfd,int sockfd, struct HEAD_USER* data){
 		char* nickname = (char*)malloc(16);
 		int r = sql_login(db,data->username,data->password,&nickname);
 		if(r){
-			struct login_return_all{
-				struct HEAD_RETURN head;
-				struct server_login_return data;
-			}returndata;	
+			struct HEAD_RETURN returnhead;
+			struct server_login_return returndata;
+			bzero(&returnhead,sizeof(returnhead));	
 			bzero(&returndata,sizeof(returndata));		
 			printf("\tlogin succeed\n");
-			returndata.head.mode = 11;
-			returndata.head.succ = 0;
-			returndata.head.datalen = sizeof(struct server_login_return);
-			strcpy(returndata.data.nickname,data->username);
+			returnhead.mode = 11;
+			returnhead.succ = 0;
+			returnhead.datalen = sizeof(struct server_login_return);
+			strcpy(returndata.nickname,data->username);
 			char* token = createToken(32);
-			memcpy(returndata.data.token, token,32);
+			memcpy(returndata.token, token,32);
 			printf("create return data\n");
 
 			char* username = (char*)malloc(16);
@@ -185,6 +185,7 @@ void userDataProcess(int epollfd,int sockfd, struct HEAD_USER* data){
 			strcpy(nickname,data->nickname);
 			g_hash_table_insert(User2Nick,username,nickname);
 
+			SendToFd(epollfd, sockfd, &returnhead,sizeof(returnhead));
 			SendToFd(epollfd, sockfd, &returndata,sizeof(returndata));
 		}else{
 			printf("\tlogin error\n");
@@ -275,6 +276,7 @@ void SendData(int epollfd, struct epoll_event* event){
 		senddata = senddata->next;
 		free(temp);
 	}
+	g_hash_table_remove(sock2data,str_sockfd);
 	free(str_sockfd);
 	modify_event(epollfd,sockfd,EPOLLIN);
 }

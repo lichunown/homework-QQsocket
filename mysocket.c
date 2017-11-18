@@ -78,7 +78,7 @@ int CreateServer(int port,int backlog){
 }
 
 ssize_t Send(int sockfd, const void *buf, size_t len, int flags){
-	printf("sending:\n");
+	printf("sending:   size = %ld\n",len);
 	print16((char*)buf,len);
 	printf("\n\n");
 	ssize_t n = send(sockfd,buf,len,flags);
@@ -89,7 +89,7 @@ ssize_t Send(int sockfd, const void *buf, size_t len, int flags){
 
 ssize_t Recv(int sockfd, void *buf, size_t len, int flags){
 	ssize_t n = recv(sockfd,buf,len,flags);
-	printf("recving:\n");
+	printf("recving:   size should be:%ld\n",len);
 	print16((char*)buf,n);
 	printf("\n\n");	
 	if(n!=len)printf("send not finish.\t %ld/%ld\n",n,len);
