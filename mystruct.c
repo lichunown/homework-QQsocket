@@ -39,14 +39,32 @@ struct HEAD_RETURN{
 	size_t datalen;
 }HEAD_RETURN;
 
-// struct HEAD_SEND_BY_FIFO{
-// 	size_t len;
-// }HEAD_SEND_BY_FIFO;
+
+struct SEND_DATA{
+	int len;
+	void* data;
+	struct SEND_DATA* next;
+};
 
 struct server_login_return{
     char nickname[16];
     char token[32];
 }server_login_return;
+
+struct client_to_server_send_to_user_head{
+	char username[16];
+	int len;
+}client_to_server_send_to_user_head;
+
+struct server_to_client_send_to_user_head{
+	char username[16];
+	int len;
+}client_to_server_send_to_user_head;
+// struct HEAD_SEND_BY_FIFO{
+// 	size_t len;
+// }HEAD_SEND_BY_FIFO;
+
+
 
 
 // struct SERVERSENDSTRUCT{
@@ -56,11 +74,7 @@ struct server_login_return{
 // }SERVERSENDSTRUCT;
 
 
-struct SEND_DATA{
-	int len;
-	void* data;
-	struct SEND_DATA* next;
-};
+
 struct HEAD_USER_ALL* data_login(char* username,char* password){
 	struct HEAD_USER_ALL* data = (struct HEAD_USER_ALL*)malloc(sizeof(struct HEAD_USER_ALL));
 	bzero(data,sizeof(struct HEAD_USER_ALL));

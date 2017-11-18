@@ -34,6 +34,8 @@
 
 ### 服务器到客户端
 
+`struct HEAD_RETURN`
+
 | discript                | mode | succ   | datalen |
 | ----------------------- | ---- | ------ | ------- |
 | login（登录）               | 11   | 0 or 1 | `len`   |
@@ -42,6 +44,8 @@
 | showlist（显示在线用户列表）      | 22   | 0 or 1 | `len`   |
 | senddata（自己的消息是否成功）     | 20   | 0 or 1 | `len`   |
 | receive data（其他人发送来的消息） | 99   | 0      | `len`   |
+| token error                | 50   | 1      | 0   |
+
 **succ==0 successful; succ!=0 unsuccessful（0为成功）**
 #### 服务器返回附加数据
 - server_login_return（登录成功返回附加数据）

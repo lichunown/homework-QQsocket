@@ -28,7 +28,6 @@ void delete_event(int epollfd,int fd,int state);
 void modify_event(int epollfd,int fd,int state);
 
 GHashTable* User2Sock;
-GHashTable* Sock2Fifo;
 GHashTable* Token2User;
 GHashTable* User2Nick;
 GHashTable* sock2event;
@@ -42,7 +41,7 @@ int main(int argv,char* args[]){
 	db = databaseInit();
     
 	User2Sock = g_hash_table_new_full(g_str_hash, g_str_equal,g_free,g_free);
-	Sock2Fifo = g_hash_table_new_full(g_str_hash, g_str_equal,g_free,g_free);
+	// Sock2Fifo = g_hash_table_new_full(g_str_hash, g_str_equal,g_free,g_free);
 	Token2User = g_hash_table_new_full(g_str_hash, g_str_equal,g_free,g_free);
 	User2Nick = g_hash_table_new_full(g_str_hash, g_str_equal,g_free,g_free);
 	sock2event = g_hash_table_new_full(g_str_hash, g_str_equal,g_free,g_free);
@@ -173,21 +172,82 @@ void userDataProcess(int epollfd,int sockfd, struct HEAD_USER* data){
 			char* token = createToken(32);
 			memcpy(returndata.data.token, token,32);
 			printf("create return data\n");
+
+			char* username = (char*)malloc(16);
+			strcpy(username,data->username);
+			g_hash_table_insert(User2Sock,username,itoa(sockfd));
+			username = (char*)malloc(16);
+			strcpy(username,data->username);			
+			g_hash_table_insert(Token2User,token,username);
+			username = (char*)malloc(16);
+			strcpy(username,data->username);
+			char* nickname = (char*)malloc(16);
+			strcpy(nickname,data->nickname);
+			g_hash_table_insert(User2Nick,username,nickname);
+
 			SendToFd(epollfd, sockfd, &returndata,sizeof(returndata));
 		}else{
 			printf("\tlogin error\n");
 			struct HEAD_RETURN returndata;
 			bzero(&returndata,sizeof(returndata));
-			returndata.head.mode = 11;
-			returndata.head.succ = 1;
-			returndata.head.datalen = 0;
+			returndata.mode = 11;
+			returndata.succ = 1;
+			returndata.datalen = 0;
 			SendToFd(epollfd, sockfd, &returndata,sizeof(returndata));
 		}
 		free(nickname);
 	}
 }
 void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data){
+	char* username = g_hash_table_lookup(Token2User,data->token);
+	if(username==NULL){//user doesnt exist
+		struct HEAD_RETURN returndata;
+		bzero(&returndata,sizeof(returndata));
+		returndata.mode = 50;
+		returndata.succ = 1;
+		returndata.datalen = 1;
+		SendToFd(epollfd, sockfd, &returndata,sizeof(returndata));
+	}
+	if(data->datamode==0){//logout
+		struct HEAD_RETURN returndata;
+		bzero(&returndata,sizeof(returndata));
+		g_hash_table_delete(User2Sock, username);
+		g_hash_table_delete(User2Nick, username);
+		g_hash_table_delete(Token2User, data->token);
+		returndata.mode = 21;
+		returndata.succ = 0;
+		returndata.datalen = 0;
+		SendToFd(epollfd, sockfd, &returndata,sizeof(returndata));		
+	}else if(data->datamode==1){//send data
+		struct client_to_server_send_to_user_head senddata_head;
+		Recv(sockfd,senddata_head,sizeof(struct client_to_server_send_to_user_head),MSG_WAITALL);
+		void* senddata = malloc(senddata_head.len);
+		Recv(sockfd,senddata,senddata_head.len,MSG_WAITALL);
 
+		user2sockfd = g_hash_table_lookup(User2Sock, senddata_head);
+		/************/
+		struct HEAD_RETURN user2head;
+		struct server_to_client_send_to_user_head user2data_head;
+		strcpy(user2data_head.username,username);
+		user2data_head.len = senddata_head.len;
+		user2head.mode = 99;
+		user2head.succ = 0;
+		user2head.datalen = sizeof(user2data_head)+senddata_head.len;
+		SendToFd(epollfd, sockfd, &user2head,sizeof(user2head));
+		SendToFd(epollfd, sockfd, &user2data_head, sizeof(user2data_head));
+		SendToFd(epollfd, sockfd, senddata, senddata_head.len);
+		struct HEAD_RETURN sendtouser1;
+		bzero(&sendtouser1,sizeof(sendtouser1));
+		sendtouser1.mode = 20;
+		sendtouser1.succ = 0;
+		SendToFd(epollfd, sockfd, &sendtouser1, sizeof(sendtouser1));
+
+
+	}else if(data->datamode==2){// show list
+
+	}else{
+
+	}
 }
 
 void SendData(int epollfd, struct epoll_event* event){
