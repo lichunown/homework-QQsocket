@@ -49,8 +49,18 @@ struct server_login_return{
 }server_login_return;
 
 
+struct SERVERSENDSTRUCT{
+	int sockfd;
+	int datalen;
+	void* data;
+}SERVERSENDSTRUCT;
 
 
+struct SEND_DATA{
+	int len;
+	void* data;
+	struct SEND_DATA* next;
+};
 struct HEAD_USER_ALL* data_login(char* username,char* password){
 	struct HEAD_USER_ALL* data = (struct HEAD_USER_ALL*)malloc(sizeof(struct HEAD_USER_ALL));
 	bzero(data,sizeof(struct HEAD_USER_ALL));
@@ -88,11 +98,7 @@ struct HEAD_DATA_ALL* data_showlist(char* token){
 	return data;
 }
 
-struct SERVERSENDSTRUCT{
-	int sockfd;
-	int datalen;
-	char* data;
-}SERVERSENDSTRUCT;
+
 
 
 #endif

@@ -9,6 +9,8 @@ test_sql:
 	gcc -g -Wall test_sql.c -o test_sql.out  -lsqlite3 #-L /usr/local/lib -lglib-2.0
 test_hash:
 	gcc -g -Wall test_hash.c -o test_hash.out $(glibdev)
+test_server_epoll:
+	gcc -g -Wall test_server_epoll.c -o test_server_epoll.out $(glibdev) $(sqlite3dev)
 client:
 	gcc -Wall client.c -o client.out
 server:
@@ -23,8 +25,9 @@ test:
 	make test_mystring 
 	make test_sql 
 	make test_hash
-test_s:
-	make test_server 
+test_se:
+	#make test_server 
+	make test_server_epoll
 	make client
 all:
 	make test

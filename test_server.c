@@ -27,30 +27,20 @@ int sendto_by_sockfd(int sockfd,void* data,size_t len);
 
 sqlite3* db = NULL;
 
-struct SHMDATA{
-    GHashTable* User2Sock;
-    GHashTable* Sock2Fifo;
-    GHashTable* Token2User;
-    GHashTable* User2Nick;
-}SHMDATA;
 
-struct SHMDATA* shmdata;
-int shmid;
+volatile GHashTable* User2Sock;
+volatile GHashTable* Sock2Fifo;
+volatile GHashTable* Token2User;
+volatile GHashTable* User2Nick;
+
+
 
 void Init(){
     assert(sizeof(struct HEAD_USER_ALL)==sizeof(struct HEAD_DATA_ALL));
-    db = databaseInit();
-    shmid = shmget((key_t)1234, sizeof(struct SHMDATA), 0666|IPC_CREAT);
-    if(shmid == -1){
-        printf("shmget error.\n");
-        exit(1);
-    }
-    shmdata = shmat(shmid, 0, 0);
-    shmdata->User2Sock = g_hash_table_new_full(g_str_hash, g_str_equal,g_free,g_free);
-    shmdata->Sock2Fifo = g_hash_table_new_full(g_str_hash, g_str_equal,g_free,g_free);
-    shmdata->Token2User = g_hash_table_new_full(g_str_hash, g_str_equal,g_free,g_free); 
-    shmdata->User2Nick = g_hash_table_new_full(g_str_hash, g_str_equal,g_free,g_free); 
-    shmdt(shmdata);
+    User2Sock = g_hash_table_new_full(g_str_hash, g_str_equal,g_free,g_free);
+    Sock2Fifo = g_hash_table_new_full(g_str_hash, g_str_equal,g_free,g_free);
+    Token2User = g_hash_table_new_full(g_str_hash, g_str_equal,g_free,g_free); 
+    User2Nick = g_hash_table_new_full(g_str_hash, g_str_equal,g_free,g_free); 
 }
 int main(int argv,char* args[]){   
     Init();
@@ -136,9 +126,9 @@ void checkloop(int sockfd){
             }  
         }
         printf("create fifo_name:%s\n",fifo_name);
-        shmdata = shmat(shmid, 0, 0);
-        g_hash_table_insert(shmdata->Sock2Fifo, itoa(sockfd), fifo_name);
-        shmdt(shmdata);
+
+        g_hash_table_insert(Sock2Fifo, itoa(sockfd), fifo_name);
+
         printf("insert fifo_name  sockfd:%d  fifo_name:%s\n",sockfd,fifo_name);
         int read_fd = open(fifo_name, O_RDONLY);      
         printf("create sock2fifo\n");
@@ -154,16 +144,16 @@ void checkloop(int sockfd){
 }
 
 int sendto_by_Token(char* token,void* data,size_t len){
-    shmdata = shmat(shmid, 0, 0);
-    char* username = g_hash_table_lookup(shmdata->Token2User,token);
-    shmdt(shmdata);
+
+    char* username = g_hash_table_lookup(Token2User,token);
+
     if(username==NULL)return -1;
     return sendto_by_User(username,data,len);
 }
 int sendto_by_User(char* username,void* data,size_t len){
-    shmdata = shmat(shmid, 0, 0);
-    char* sockfd_s = g_hash_table_lookup(shmdata->User2Sock,username);
-    shmdt(shmdata);
+
+    char* sockfd_s = g_hash_table_lookup(User2Sock,username);
+
     if(sockfd_s == NULL)return -1;
     int sockfd = atoi(sockfd_s);
     return sendto_by_sockfd(sockfd,data,len);
@@ -173,9 +163,9 @@ int sendto_by_sockfd(int sockfd,void* data,size_t len){
     
     printf("sendto_by_sockfd:  sockfd:%d \n",sockfd);
     char* sockfd_s = itoa(sockfd);
-    shmdata = shmat(shmid, 0, 0);
-    char* fifo_name = g_hash_table_lookup(shmdata->Sock2Fifo,sockfd_s);
-    shmdt(shmdata);
+    //shmdata = shmat(shmid, 0, 0);
+    char* fifo_name = g_hash_table_lookup(Sock2Fifo,sockfd_s);
+    //shmdt(shmdata);
     if(fifo_name==NULL){
         printf("[error] fifo_name not exist in hashtable.\t sockfd: %d\n",sockfd);
         return -1;
@@ -212,11 +202,10 @@ void server_login(int sockfd,struct HEAD_USER* data){
         char* token = createToken(32);
         char* username3 = (char*)malloc(16);
         strcpy(username3,data->username);  
-        shmdata = shmat(shmid, 0, 0);
-        g_hash_table_insert(shmdata->User2Sock, username1, itoa(sockfd));
-        g_hash_table_insert(shmdata->User2Nick, username2, nickname);      
-        g_hash_table_insert(shmdata->Token2User, token, username3);
-        shmdt(shmdata);
+        g_hash_table_insert(User2Sock, username1, itoa(sockfd));
+        g_hash_table_insert(User2Nick, username2, nickname);      
+        g_hash_table_insert(Token2User, token, username3);
+
         struct server_login_return rdata;
         bzero(&rdata,sizeof(rdata));
         strcpy(rdata.nickname,data->username);
