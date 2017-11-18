@@ -268,7 +268,7 @@ void SendData(int epollfd, struct epoll_event* event){
 	struct SEND_DATA* senddata = (struct SEND_DATA*)atol(str_datap);
 	//if(senddata==NULL)printf("[error]senddata==NULL.\n");
 	while(senddata != NULL){
-		printf("send............\n");
+		printf("send list..........\n");
 		printf("Send: len:%d\n",senddata->len);
 		// printf("Send: data:`%s`\n",(char*)senddata->data);
 		Send(sockfd,senddata->data,senddata->len,0);
@@ -292,8 +292,10 @@ void SendToFd(int epollfd, int sockfd,void* data,int size){
 	newdata->next = NULL;
 
 	if(sendlist==NULL){
+        printf("sock2data create new\n");
 		g_hash_table_insert(sock2data,itoa(sockfd),ptoa(newdata));
 	}else{
+        printf("sock2data add new\n");
 		while(sendlist->next != NULL)sendlist = sendlist->next;
 		sendlist->next = newdata;
 	}
