@@ -1,6 +1,9 @@
 glibdev = -L /usr/local/lib -lglib-2.0
 sqlite3dev = -lsqlite3
 
+default:
+	make client
+	make server
 test_server:
 	gcc -g -Wall test_server.c -o test_server.out $(glibdev) $(sqlite3dev)
 test_mystring:
@@ -17,18 +20,11 @@ server:
 	gcc -g -Wall server.c -o server.out $(glibdev) $(sqlite3dev)
 clean:
 	rm -f *.out 
-default:
-	make client
-	make server
 test:
 	make test_server 
 	make test_mystring 
 	make test_sql 
 	make test_hash
-test_se:
-	#make test_server 
-	make test_server_epoll
-	make client
 all:
 	make test
 	make 
