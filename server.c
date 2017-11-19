@@ -128,8 +128,8 @@ void RecvData(int epollfd, int fd){
 		Recv(fd,&data, sizeof(data),MSG_WAITALL);
 		dataDataProcess(epollfd,fd,&data);
 	}else{
-		printf("\tdata error or This is a test string\n");
-		SendToFd(epollfd,fd,"This is an echo.\n",sizeof("This is an echo.\n"));
+		//printf("\tdata error or This is a test string\n");
+		//SendToFd(epollfd,fd,"This is an echo.\n",sizeof("This is an echo.\n"));
 	}
 	printf("End recving\n\n");
 }  
@@ -171,7 +171,7 @@ void userDataProcess(int epollfd,int sockfd, struct HEAD_USER* data){
 			strcpy(returndata.nickname,data->username);
 			char* token = createToken(32);
 			memcpy(returndata.token, token,32);
-			printf("create return data\n");
+			// printf("create return data\n");
 
 			char* username = (char*)malloc(16);
 			strcpy(username,data->username);
@@ -242,7 +242,7 @@ void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data){
 		user2data_head.len = senddata_head.len;
 		user2head.mode = 99;
 		user2head.succ = 0;
-		user2head.datalen = sizeof(user2data_head)+senddata_head.len;
+		user2head.datalen = (int)sizeof(user2data_head)+senddata_head.len;
 		SendToFd(epollfd, user2sockfd, &user2head,sizeof(user2head));
 		SendToFd(epollfd, user2sockfd, &user2data_head, sizeof(user2data_head));
 		SendToFd(epollfd, user2sockfd, senddata, senddata_head.len);
@@ -261,16 +261,14 @@ void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data){
 }
 
 void SendData(int epollfd, struct epoll_event* event){
-	printf("SendData function start   event.fd:%d\n",event->data.fd);
+	// printf("SendData function start   event.fd:%d\n",event->data.fd);
 	int sockfd = event->data.fd;
 	char* str_sockfd = itoa(sockfd);
 	char* str_datap = g_hash_table_lookup(sock2data,str_sockfd);
 	struct SEND_DATA* senddata = (struct SEND_DATA*)atol(str_datap);
-	//if(senddata==NULL)printf("[error]senddata==NULL.\n");
 	while(senddata != NULL){
-		printf("send list..........\n");
-		printf("Send: len:%d\n",senddata->len);
-		// printf("Send: data:`%s`\n",(char*)senddata->data);
+		// printf("send list....... %p  next:%p\n",senddata,senddata->next);
+		// printf("Send: len:%d   data address:%p\n ",senddata->len,senddata->data);
 		Send(sockfd,senddata->data,senddata->len,0);
 		struct SEND_DATA* temp = senddata;
 		senddata = senddata->next;
@@ -284,20 +282,22 @@ void SendData(int epollfd, struct epoll_event* event){
 
 void SendToFd(int epollfd, int sockfd,void* data,int size){
 	char* str_sockfd = itoa(sockfd);
-	struct SEND_DATA* sendlist = g_hash_table_lookup(sock2data,str_sockfd);
+	char* str_datap = g_hash_table_lookup(sock2data,str_sockfd);
 
 	struct SEND_DATA* newdata = (struct SEND_DATA*)malloc(sizeof(struct SEND_DATA));
 	newdata->len = size;
 	newdata->data = data;
 	newdata->next = NULL;
 
-	if(sendlist==NULL){
-        printf("sock2data create new\n");
+	if(str_datap==NULL){
+        // printf("sock2data create new   %p data:%p \n",newdata,data);
 		g_hash_table_insert(sock2data,itoa(sockfd),ptoa(newdata));
 	}else{
-        printf("sock2data add new\n");
+		struct SEND_DATA* sendlist = (struct SEND_DATA*)atol(str_datap);
+        // printf("sock2data add new  %p  data:%p\n",newdata,data);
 		while(sendlist->next != NULL)sendlist = sendlist->next;
 		sendlist->next = newdata;
+		// printf("insert data %p\n",sendlist->next);
 	}
 	free(str_sockfd);
 	modify_event(epollfd,sockfd,EPOLLOUT);

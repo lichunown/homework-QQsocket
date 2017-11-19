@@ -71,7 +71,7 @@ void checkcmd(int sockfd,char** splitdata){
 	}else if(strcmp(splitdata[0],"#sendto")==0){
 		client_sendto(sockfd,splitdata[1]);// TODO
 	}else if(strcmp(splitdata[0],"#test")==0){
-		client_test(sockfd,splitdata[1]);// TODO
+		//client_test(sockfd,splitdata[1]);// TODO
 	}else{
 		printf("please use cmds:\n\t\t`#login` `#signup` `#logout` `#exit` `#sendto`\n");
 	}
@@ -104,7 +104,7 @@ void checkresponse(int sockfd, struct HEAD_RETURN* receiveHead){
 		assert(receiveHead->datalen == sizeof(server_login_return));
 		login_ok(data);
 	}else {
-		printf("Test???\n:`%s`\n",(char*)receiveHead);
+		//printf("Test???\n:`%s`\n",(char*)receiveHead);
 	}
 	if(data != NULL)free(data);
 }
@@ -155,7 +155,7 @@ void client_login(int sockfd,char* data){// TODO
 	free_splitdata(uandp);
 }
 void client_test(int sockfd,char* data){
-	Send(sockfd,"This is a Test string.\n",sizeof("This is a Test string.\n"),0);
+	//Send(sockfd,"This is a Test string.\n",sizeof("This is a Test string.\n"),0);
 }
 void client_logout(int sockfd,char* data){
 

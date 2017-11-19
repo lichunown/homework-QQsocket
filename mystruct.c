@@ -36,7 +36,7 @@ struct HEAD_DATA_ALL{
 struct HEAD_RETURN{
 	char mode;
 	char succ;//是否成功
-	size_t datalen;
+	int datalen;
 }HEAD_RETURN;
 
 

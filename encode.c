@@ -5,7 +5,7 @@
 #include <time.h>
 
 char* createToken(int len); // 创建长度len-1的随机字符串（最后一位是'\0'）[需要手工free]
-void print16(char* data,int size);// 每个字节以16进制输出
+void print16(const char* data,int size);// 每个字节以16进制输出
 
 char* createToken(int len){
 	srand(time(NULL));
@@ -23,9 +23,9 @@ char* encodePassword(char* password){
 	return password;
 }
 
-void print16(char* data,int size){
+void print16(const char* data,int size){
 	for(int i=0;i<size;i++){
-		printf("%02x ", data[i]);
+		printf("%02x ", (unsigned char)data[i]);
 	}
 	printf("\n");
 }
