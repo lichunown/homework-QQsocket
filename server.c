@@ -165,9 +165,9 @@ void userDataProcess(int epollfd,int sockfd, struct HEAD_USER* data){
 			bzero(&returnhead,sizeof(returnhead));	
 			bzero(&returndata,sizeof(returndata));		
 			printf("\tlogin succeed\n");
-			returnhead.mode = 11;
+			returnhead.mode = (char)11;
 			returnhead.succ = 0;
-			returnhead.datalen = sizeof(struct server_login_return);
+			returnhead.datalen = htons(48);//htons((int)sizeof(struct server_login_return));
 			strcpy(returndata.nickname,data->username);
 			char* token = createToken(32);
 			memcpy(returndata.token, token,32);

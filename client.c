@@ -91,17 +91,20 @@ void mainReadLoop(int sockfd){
 }
 void checkresponse(int sockfd, struct HEAD_RETURN* receiveHead){
 	void* data = NULL;
+	unsigned int length;
 	if(receiveHead->datalen != 0){
-		data = malloc(receiveHead->datalen);
-		Recv(sockfd,data,receiveHead->datalen,MSG_WAITALL);
+		length = receiveHead->datalen;
+		data = malloc(length);
+		Recv(sockfd,data,length,MSG_WAITALL);
 		printf("recv str:`%s`\n",(char*)data);
 	}
 	if(receiveHead->succ==0){
 		printf("[message] cmd succ\n");
 	}else{
 		printf("[message] cmd fail\n");
-	}if(receiveHead->mode == 11 && receiveHead->succ == 0){
-		assert(receiveHead->datalen == sizeof(server_login_return));
+	}
+	if(receiveHead->mode == 11 && receiveHead->succ == 0){
+		assert(length == sizeof(server_login_return));
 		login_ok(data);
 	}else {
 		//printf("Test???\n:`%s`\n",(char*)receiveHead);
