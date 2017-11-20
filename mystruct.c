@@ -4,6 +4,7 @@
 
 #define TOKENSIZE 32
 
+/*客户端向服务器发送的头*/
 struct HEAD_MAIN{
 	char mode;
 }HEAD_MAIN;
@@ -38,15 +39,16 @@ struct HEAD_RETURN{
 	char succ;//是否成功
 	unsigned int datalen;
 }HEAD_RETURN;
+/****************************/
 
 
-struct SEND_DATA{
+struct SEND_DATA{// epoll发送数据，是个链表
 	int len;
 	void* data;
 	struct SEND_DATA* next;
 };
 
-struct server_login_return{
+struct server_login_return{// 登陆成功后附加数据
     char nickname[16];
     char token[32];
 }server_login_return;

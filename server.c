@@ -1,3 +1,8 @@
+/**********************************************
+author:lcy
+服务器。采用epoll多路复用。单进程模式。
+
+***********************************************/
 #include "mysocket.c"
 #include "mystruct.c"
 #include "mystring.c"
@@ -27,11 +32,11 @@ void add_event(int epollfd,int fd,int state);
 void delete_event(int epollfd,int fd,int state);
 void modify_event(int epollfd,int fd,int state);
 
-GHashTable* User2Sock;
-GHashTable* Token2User;
-GHashTable* User2Nick;
+GHashTable* User2Sock;// 用户名到sockfd
+GHashTable* Token2User;// token 到用户名
+GHashTable* User2Nick;// 用户名到昵称
 GHashTable* sock2event;
-GHashTable* sock2data;
+GHashTable* sock2data;// 向sockfd发送的临时数据
 
 sqlite3* db = NULL;
 
@@ -41,7 +46,6 @@ int main(int argv,char* args[]){
 	db = databaseInit();
     
 	User2Sock = g_hash_table_new_full(g_str_hash, g_str_equal,g_free,g_free);
-	// Sock2Fifo = g_hash_table_new_full(g_str_hash, g_str_equal,g_free,g_free);
 	Token2User = g_hash_table_new_full(g_str_hash, g_str_equal,g_free,g_free);
 	User2Nick = g_hash_table_new_full(g_str_hash, g_str_equal,g_free,g_free);
 	sock2event = g_hash_table_new_full(g_str_hash, g_str_equal,g_free,g_free);
@@ -94,7 +98,7 @@ int main(int argv,char* args[]){
     return 0;  
 }  
 
-void AcceptConn(int epollfd, int srvfd){  
+void AcceptConn(int epollfd, int srvfd){  // 新的客户端建立连接
     struct sockaddr_in sin;  
     socklen_t len = sizeof(struct sockaddr_in);  
     bzero(&sin, len);  
@@ -102,7 +106,7 @@ void AcceptConn(int epollfd, int srvfd){
     printf("Accept Connection: %d\n", clientfd);  
     struct epoll_event event;  
     event.data.fd = clientfd;  
-    event.events =  EPOLLIN;  
+    event.events =  EPOLLIN; // 设置为接收消息模式 
     epoll_ctl(epollfd, EPOLL_CTL_ADD, clientfd, &event);  
     printf("create & insert event:%p\n",&event);
     g_hash_table_insert(sock2event, itoa(clientfd), ptoa(&event));
@@ -135,31 +139,32 @@ void RecvData(int epollfd, int fd){
 }  
 
 void userDataProcess(int epollfd,int sockfd, struct HEAD_USER* data){
-	if(data->logmode==0){
+    /*处理用户登录模式的逻辑*/
+	if(data->logmode==0){ //注册
 		printf("\t\tlogmode = 0  [signup]\n");
 		printf("\t\tusername = `%s` password = `%s` nickname = `%s` \n",data->username,data->password,data->nickname);
 		int r = sql_createUser(db,data->username,data->password,data->nickname);
 		struct HEAD_RETURN returndata;
 		bzero(&returndata,sizeof(returndata));
-		if(r){
+		if(r){// 用户注册成功
 			printf("signup successful.\n");
 			returndata.mode = 12;
 			returndata.succ = 0;
 			returndata.datalen = 0;
 			SendToFd(epollfd, sockfd, &returndata,sizeof(returndata));
-		}else{
+		}else{// 用户注册失败
 			printf("signup error.\n");
 			returndata.mode = 12;
 			returndata.succ = 1;
 			returndata.datalen = 0;
 			SendToFd(epollfd, sockfd, &returndata,sizeof(returndata));
 		}
-	}else if(data->logmode==1){
+	}else if(data->logmode==1){// 登录
 		printf("\t\tlogmode = 1  [login]\n");
 		printf("\t\tusername = `%s` password = `%s` \n",data->username,data->password);
 		char* nickname = (char*)malloc(16);
 		int r = sql_login(db,data->username,data->password,&nickname);
-		if(r){
+		if(r){// 用户登录成功
 			struct HEAD_RETURN returnhead;
 			struct server_login_return returndata;
 			bzero(&returnhead,sizeof(returnhead));	
@@ -167,6 +172,7 @@ void userDataProcess(int epollfd,int sockfd, struct HEAD_USER* data){
 			printf("\tlogin succeed\n");
 			returnhead.mode = (char)11;
 			returnhead.succ = 0;
+            // TODO ***************
 			returnhead.datalen = htons(48);//htons((int)sizeof(struct server_login_return));
 			strcpy(returndata.nickname,data->username);
 			char* token = createToken(32);
@@ -187,7 +193,7 @@ void userDataProcess(int epollfd,int sockfd, struct HEAD_USER* data){
 
 			SendToFd(epollfd, sockfd, &returnhead,sizeof(returnhead));
 			SendToFd(epollfd, sockfd, &returndata,sizeof(returndata));
-		}else{
+		}else{// 登录失败
 			printf("\tlogin error\n");
 			struct HEAD_RETURN returndata;
 			bzero(&returndata,sizeof(returndata));
@@ -201,7 +207,7 @@ void userDataProcess(int epollfd,int sockfd, struct HEAD_USER* data){
 }
 void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data){
 	char* username = g_hash_table_lookup(Token2User,data->token);
-	if(username==NULL){//user doesnt exist
+	if(username==NULL){//用户不存在
 		struct HEAD_RETURN returndata;
 		bzero(&returndata,sizeof(returndata));
 		returndata.mode = 50;
@@ -209,7 +215,7 @@ void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data){
 		returndata.datalen = 1;
 		SendToFd(epollfd, sockfd, &returndata,sizeof(returndata));
 	}
-	if(data->datamode==0){//logout
+	if(data->datamode==0){//登出
 		struct HEAD_RETURN returndata;
 		bzero(&returndata,sizeof(returndata));
 		g_hash_table_remove(User2Sock, username);
@@ -219,14 +225,14 @@ void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data){
 		returndata.succ = 0;
 		returndata.datalen = 0;
 		SendToFd(epollfd, sockfd, &returndata,sizeof(returndata));		
-	}else if(data->datamode==1){//send data
+	}else if(data->datamode==1){//用户发送数据
 		struct client_to_server_send_to_user_head senddata_head;
 		Recv(sockfd,&senddata_head,sizeof(senddata_head),MSG_WAITALL);
 		void* senddata = malloc(senddata_head.len);
 		Recv(sockfd,senddata,senddata_head.len,MSG_WAITALL);
 
 		char* s_user2sockfd = g_hash_table_lookup(User2Sock, senddata_head.username);
-		if(s_user2sockfd==NULL){
+		if(s_user2sockfd==NULL){// 要发送的人不存在
 			struct HEAD_RETURN sendtouser1;
 			bzero(&sendtouser1,sizeof(sendtouser1));
 			sendtouser1.mode = 20;
@@ -260,13 +266,13 @@ void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data){
 	}
 }
 
-void SendData(int epollfd, struct epoll_event* event){
+void SendData(int epollfd, struct epoll_event* event){// 服务器发送数据
 	// printf("SendData function start   event.fd:%d\n",event->data.fd);
 	int sockfd = event->data.fd;
 	char* str_sockfd = itoa(sockfd);
-	char* str_datap = g_hash_table_lookup(sock2data,str_sockfd);
+	char* str_datap = g_hash_table_lookup(sock2data,str_sockfd);//寻找发送到sockfd的数据
 	struct SEND_DATA* senddata = (struct SEND_DATA*)atol(str_datap);
-	while(senddata != NULL){
+	while(senddata != NULL){// 循环读入数据链表，发送数据并free已发送数据
 		// printf("send list....... %p  next:%p\n",senddata,senddata->next);
 		// printf("Send: len:%d   data address:%p\n ",senddata->len,senddata->data);
 		Send(sockfd,senddata->data,senddata->len,0);
@@ -274,13 +280,14 @@ void SendData(int epollfd, struct epoll_event* event){
 		senddata = senddata->next;
 		free(temp);
 	}
-	g_hash_table_remove(sock2data,str_sockfd);
+	g_hash_table_remove(sock2data,str_sockfd);// 自动free数据段
 	free(str_sockfd);
 	modify_event(epollfd,sockfd,EPOLLIN);
 }
 
 
-void SendToFd(int epollfd, int sockfd,void* data,int size){
+void SendToFd(int epollfd, int sockfd,void* data,int size){// 向sockfd发送数据（不是实时发送）
+    /*因使用epoll，实际发送为下一次epoll循环时*/
 	char* str_sockfd = itoa(sockfd);
 	char* str_datap = g_hash_table_lookup(sock2data,str_sockfd);
 
@@ -300,7 +307,7 @@ void SendToFd(int epollfd, int sockfd,void* data,int size){
 		// printf("insert data %p\n",sendlist->next);
 	}
 	free(str_sockfd);
-	modify_event(epollfd,sockfd,EPOLLOUT);
+	modify_event(epollfd,sockfd,EPOLLOUT);// 将sockfd转换为发送数据模式
 }
 
 void add_event(int epollfd,int fd,int state){
