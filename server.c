@@ -121,18 +121,18 @@ void RecvData(int epollfd, int fd){
 		printf("socked %d receive %d.  error\n",fd,n);
 		delete_event(epollfd,fd,EPOLLIN);
 	}
-	if(head_main.mode==0){
+	if(head_main.mode==0){// user模式
 		printf("\t receive mode = 0\n");
 		struct HEAD_USER data;
 		Recv(fd,&data, sizeof(data),MSG_WAITALL);
 		userDataProcess(epollfd,fd, &data);
-	}else if(head_main.mode==1){
+	}else if(head_main.mode==1){// data模式
 		printf("\t receive mode = 1\n");
 		struct HEAD_DATA data;
 		Recv(fd,&data, sizeof(data),MSG_WAITALL);
 		dataDataProcess(epollfd,fd,&data);
-	}else{
-		//printf("\tdata error or This is a test string\n");
+	}else{// 数据接收错误
+		//printf("\tdata err   or or This is a test string\n");
 		//SendToFd(epollfd,fd,"This is an echo.\n",sizeof("This is an echo.\n"));
 	}
 	printf("End recving\n\n");
