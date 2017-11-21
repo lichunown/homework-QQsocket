@@ -16,8 +16,8 @@ test_hash:
 test_server_epoll:
 	gcc -g -Wall test_server_epoll.c -o test_server_epoll $(glibdev) $(sqlite3dev)
 test_htons:
-	gcc -Wall test_int_in_socket.c
-	gcc -Wall test_int_in_socket_server.c
+	gcc -Wall test_int_in_socket.c -o test_int_in_socket
+	gcc -Wall test_int_in_socket_server.c -o test_int_in_socket_server
 client:
 	gcc -Wall client.c -o client
 server:

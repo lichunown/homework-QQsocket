@@ -12,7 +12,7 @@ int main(){
     printf("send data of a:\n");
     print16((char*)&a,sizeof(a));
     printf("int:`%d`\n",a);
-    a = htons(NUM);
+    a = htonl(NUM);
     Send(clientfd,&a,sizeof(a),0);
     printf("send #htons# data of a:\n");
     print16((char*)&a,sizeof(a));

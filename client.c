@@ -89,7 +89,7 @@ void mainReadLoop(int sockfd){
 	int n;
 	while(1){
 		bzero(&receiveHead,sizeof(receiveHead));
-		n = Recv(sockfd,&receiveHead,sizeof(receiveHead),MSG_WAITALL);
+		n = Recv(sockfd,&receiveHead,sizeof(receiveHead),0);
 		if(n<=0){
 			printf("Server Error. \n");
 			exit(0);
@@ -103,7 +103,7 @@ void checkresponse(int sockfd, struct HEAD_RETURN* receiveHead){
 	if(receiveHead->datalen != 0){
 		length = receiveHead->datalen;
 		data = malloc(length);
-		Recv(sockfd,data,length,MSG_WAITALL);
+		Recv(sockfd,data,length,0);
 		printf("recv str:`%s`\n",(char*)data);
 	}
 	if(receiveHead->succ==0){

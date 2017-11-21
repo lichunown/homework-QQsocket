@@ -116,7 +116,7 @@ void AcceptConn(int epollfd, int srvfd){  // 新的客户端建立连接
 void RecvData(int epollfd, int fd){  
 	printf("Recving data:%d\n",fd);
 	struct HEAD_MAIN head_main;
-	int n = Recv(fd,&head_main, sizeof(head_main),MSG_WAITALL);
+	int n = Recv(fd,&head_main, sizeof(head_main),0);
 	if(n<=0){
 		printf("socked %d receive %d.  error\n",fd,n);
 		delete_event(epollfd,fd,EPOLLIN);
@@ -124,12 +124,12 @@ void RecvData(int epollfd, int fd){
 	if(head_main.mode==0){// user模式
 		printf("\t receive mode = 0\n");
 		struct HEAD_USER data;
-		Recv(fd,&data, sizeof(data),MSG_WAITALL);
+		Recv(fd,&data, sizeof(data),0);
 		userDataProcess(epollfd,fd, &data);
 	}else if(head_main.mode==1){// data模式
 		printf("\t receive mode = 1\n");
 		struct HEAD_DATA data;
-		Recv(fd,&data, sizeof(data),MSG_WAITALL);
+		Recv(fd,&data, sizeof(data),0);
 		dataDataProcess(epollfd,fd,&data);
 	}else{// 数据接收错误
 		//printf("\tdata err   or or This is a test string\n");
@@ -173,7 +173,9 @@ void userDataProcess(int epollfd,int sockfd, struct HEAD_USER* data){
 			returnhead.mode = (char)11;
 			returnhead.succ = 0;
             // TODO ***************
-			returnhead.datalen = htons(48);//htons((int)sizeof(struct server_login_return));
+			returnhead.datalen = htonl(48);//htons((int)sizeof(struct server_login_return));
+			printf("return head:  %p\n",&returnhead);
+			print16((char*)&returnhead,sizeof(returnhead));
 			strcpy(returndata.nickname,data->username);
 			char* token = createToken(32);
 			memcpy(returndata.token, token,32);
@@ -227,9 +229,9 @@ void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data){
 		SendToFd(epollfd, sockfd, &returndata,sizeof(returndata));		
 	}else if(data->datamode==1){//用户发送数据
 		struct client_to_server_send_to_user_head senddata_head;
-		Recv(sockfd,&senddata_head,sizeof(senddata_head),MSG_WAITALL);
+		Recv(sockfd,&senddata_head,sizeof(senddata_head),0);
 		void* senddata = malloc(senddata_head.len);
-		Recv(sockfd,senddata,senddata_head.len,MSG_WAITALL);
+		Recv(sockfd,senddata,senddata_head.len,0);
 
 		char* s_user2sockfd = g_hash_table_lookup(User2Sock, senddata_head.username);
 		if(s_user2sockfd==NULL){// 要发送的人不存在
@@ -273,8 +275,10 @@ void SendData(int epollfd, struct epoll_event* event){// 服务器发送数据
 	char* str_datap = g_hash_table_lookup(sock2data,str_sockfd);//寻找发送到sockfd的数据
 	struct SEND_DATA* senddata = (struct SEND_DATA*)atol(str_datap);
 	while(senddata != NULL){// 循环读入数据链表，发送数据并free已发送数据
-		// printf("send list....... %p  next:%p\n",senddata,senddata->next);
-		// printf("Send: len:%d   data address:%p\n ",senddata->len,senddata->data);
+		printf("send list....... %p  next:%p\n",senddata,senddata->next);
+		printf("Send: len:%d   data address:%p\n ",senddata->len,senddata->data);
+		print16(senddata->data,8);
+		print16(senddata->data,8);
 		Send(sockfd,senddata->data,senddata->len,0);
 		struct SEND_DATA* temp = senddata;
 		senddata = senddata->next;
@@ -297,12 +301,16 @@ void SendToFd(int epollfd, int sockfd,void* data,int size){// 向sockfd发送数
 	newdata->next = NULL;
 
 	if(str_datap==NULL){
-        // printf("sock2data create new   %p data:%p \n",newdata,data);
+        printf("sock2data create new   %p data:%p \n",newdata,data);
+        print16(data,8);
 		g_hash_table_insert(sock2data,itoa(sockfd),ptoa(newdata));
 	}else{
 		struct SEND_DATA* sendlist = (struct SEND_DATA*)atol(str_datap);
-        // printf("sock2data add new  %p  data:%p\n",newdata,data);
-		while(sendlist->next != NULL)sendlist = sendlist->next;
+        printf("sock2data add new  %p  data:%p\n",newdata,data);
+		while(sendlist->next != NULL){
+			print16(sendlist->data,8);
+			sendlist = sendlist->next;
+		}
 		sendlist->next = newdata;
 		// printf("insert data %p\n",sendlist->next);
 	}
