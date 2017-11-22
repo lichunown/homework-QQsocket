@@ -21,6 +21,8 @@ void client_signup(int sockfd,char* data);
 void client_logout(int sockfd,char* data);
 void client_sendto(int sockfd,char* data);
 void client_test(int sockfd,char* data);
+void client_showlist(int sockfd,char* token);
+
 void mainReadLoop(int sockfd);
 void mainWriteLoop(int sockfd);
 
@@ -80,6 +82,8 @@ void checkcmd(int sockfd,char** splitdata){
 		client_sendto(sockfd,splitdata[1]);// TODO
 	}else if(strcmp(splitdata[0],"#test")==0){
 		//client_test(sockfd,splitdata[1]);// TODO
+	}else if(strcmp(splitdata[0],"#showlist")==0){
+		client_showlist(sockfd,splitdata[1]);
 	}else{
 		printf("please use cmds:\n\t\t`#login` `#signup` `#logout` `#exit` `#sendto`\n");
 	}
@@ -114,7 +118,17 @@ void checkresponse(int sockfd, struct HEAD_RETURN* receiveHead){
 	if(receiveHead->mode == 11 && receiveHead->succ == 0){
 		assert(length == sizeof(server_login_return));
 		login_ok(data);
-	}else {
+	}else if(receiveHead->mode == 12 && receiveHead->succ == 0){
+		printf("Please login use the new username.");
+	}else if(receiveHead->mode == 22 && receiveHead->succ == 0){
+		printf("LOGIN User:\n");
+		for(int i = 0;i<length/sizeof(struct list_per_user);i++){
+			struct list_per_user perdata;
+			Recv(sockfd,&perdata,sizeof(struct list_per_user),0);
+			printf("\t %s: %s\n",perdata.username,perdata.nickname);
+		}
+	}
+	else {
 		//printf("Test???\n:`%s`\n",(char*)receiveHead);
 	}
 	if(data != NULL)free(data);
@@ -159,6 +173,7 @@ void client_login(int sockfd,char* data){// TODO
 	char** uandp = split(data);
 	char* username = uandp[0];
 	char* password = uandp[1];
+	strcpy(USERNAME,username);
 	printf("you input username:%s password:%s\n",username,password);
 	struct HEAD_USER_ALL* senddata = data_login(username,password);
 	Send(sockfd,senddata,sizeof(struct HEAD_USER_ALL),0);
@@ -173,4 +188,17 @@ void client_logout(int sockfd,char* data){
 }
 void client_sendto(int sockfd,char* data){
 	
+}
+
+void client_showlist(int sockfd,char* token){
+
+	struct HEAD_DATA_ALL headdata;
+	bzero(&headdata,sizeof(headdata));
+	headdata.main.mode = 1;
+	strcpy(headdata.data.token,token);	
+	headdata.data.datamode = 2;
+	Send(sockfd,&headdata,sizeof(headdata),0);
+
+
+
 }
