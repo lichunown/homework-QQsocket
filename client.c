@@ -42,8 +42,7 @@ int main(int argv,char* args[]){
 	USERNAME = (char*)malloc(16);
 	NICKNAME = (char*)malloc(16);
 
-	printf("HEAD_USER_ALL:%ld  HEAD_DATA_ALL:%ld\n",sizeof(struct HEAD_USER_ALL),sizeof(struct HEAD_DATA_ALL));
-	assert(sizeof(struct HEAD_USER_ALL)==sizeof(struct HEAD_DATA_ALL));
+
 	if(argv != 3){
 		printf("please input: `name [ip_address] [port]`\n");
 		exit(1);
@@ -191,14 +190,13 @@ void client_sendto(int sockfd,char* data){
 }
 
 void client_showlist(int sockfd,char* token){
-
-	struct HEAD_DATA_ALL headdata;
+	struct HEAD_MAIN headmain;
+	headmain.mode = 1;
+	Send(sockfd,&headmain,sizeof(headmain),0);
+	struct HEAD_DATA headdata;
 	bzero(&headdata,sizeof(headdata));
-	headdata.main.mode = 1;
-	strcpy(headdata.data.token,token);	
-	headdata.data.datamode = 2;
+	strcpy(headdata.token,token);	
+	headdata.datamode = 2;
 	Send(sockfd,&headdata,sizeof(headdata),0);
-
-
 
 }

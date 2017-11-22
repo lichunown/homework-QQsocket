@@ -29,10 +29,10 @@ struct HEAD_USER_ALL{
 	struct HEAD_USER user;
 }HEAD_USER_ALL;
 
-struct HEAD_DATA_ALL{
-	struct HEAD_MAIN main;
-	struct HEAD_DATA data;
-}HEAD_DATA_ALL;
+// struct HEAD_DATA_ALL{
+// 	struct HEAD_MAIN main;
+// 	struct HEAD_DATA data;
+// }HEAD_DATA_ALL;
 
 struct HEAD_RETURN{
 	char mode;
@@ -101,23 +101,23 @@ struct HEAD_USER_ALL* data_signup(char* username,char* password,char* nickname){
 	strcpy(data->user.nickname,nickname);
 	return data;
 }
-struct HEAD_DATA_ALL* data_logout(char* token){
-	struct HEAD_DATA_ALL* data = (struct HEAD_DATA_ALL*)malloc(sizeof(HEAD_DATA_ALL));
-	bzero(data,sizeof(HEAD_DATA_ALL));
-	data->main.mode = (char)1;
-	memcpy(data->data.token,token,32);
-	data->data.datamode = 0;
-	return data;
-}
+// struct HEAD_DATA_ALL* data_logout(char* token){
+// 	struct HEAD_DATA_ALL* data = (struct HEAD_DATA_ALL*)malloc(sizeof(HEAD_DATA_ALL));
+// 	bzero(data,sizeof(HEAD_DATA_ALL));
+// 	data->main.mode = (char)1;
+// 	memcpy(data->data.token,token,32);
+// 	data->data.datamode = 0;
+// 	return data;
+// }
 
-struct HEAD_DATA_ALL* data_showlist(char* token){
-	struct HEAD_DATA_ALL* data = (struct HEAD_DATA_ALL*)malloc(sizeof(HEAD_DATA_ALL));
-	bzero(data,sizeof(HEAD_DATA_ALL));
-	data->main.mode = (char)1;
-	memcpy(data->data.token,token,32);
-	data->data.datamode = 2;
-	return data;
-}
+// struct HEAD_DATA_ALL* data_showlist(char* token){
+// 	struct HEAD_DATA_ALL* data = (struct HEAD_DATA_ALL*)malloc(sizeof(HEAD_DATA_ALL));
+// 	bzero(data,sizeof(HEAD_DATA_ALL));
+// 	data->main.mode = (char)1;
+// 	memcpy(data->data.token,token,32);
+// 	data->data.datamode = 2;
+// 	return data;
+// }
 
 
 

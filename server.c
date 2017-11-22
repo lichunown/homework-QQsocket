@@ -125,12 +125,12 @@ void RecvData(int epollfd, int fd){
 		delete_event(epollfd,fd,EPOLLIN);
 	}
 	if(head_main.mode==0){// user模式
-		printf("\t receive mode = 0\n");
+		printf("\t receive mode = 0  #USER mode#\n");
 		struct HEAD_USER data;
 		Recv(fd,&data, sizeof(data),0);
 		userDataProcess(epollfd,fd, &data);
 	}else if(head_main.mode==1){// data模式
-		printf("\t receive mode = 1\n");
+		printf("\t receive mode = 1  #DATA mode#\n");
 		struct HEAD_DATA data;
 		Recv(fd,&data, sizeof(data),0);
 		dataDataProcess(epollfd,fd,&data);
@@ -213,14 +213,17 @@ void userDataProcess(int epollfd,int sockfd, struct HEAD_USER* data){
 void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data){
 	char* username = g_hash_table_lookup(Token2User,data->token);
 	if(username==NULL){//用户不存在
+		printf("user doesnt exist\n");
 		struct HEAD_RETURN* returndata = malloc(sizeof(struct HEAD_RETURN));
 		bzero(returndata,sizeof(struct HEAD_RETURN));
 		returndata->mode = 50;
 		returndata->succ = 1;
 		returndata->datalen = 1;
 		SendToFd(epollfd, sockfd, returndata,sizeof(struct HEAD_RETURN));
+		return;
 	}
 	if(data->datamode==0){//登出
+		printf("[mode logout]\n");
 		struct HEAD_RETURN* returndata = (struct HEAD_RETURN*)malloc(sizeof(struct HEAD_RETURN));
 		bzero(returndata,sizeof(struct HEAD_RETURN));
 		g_hash_table_remove(User2Sock, username);
@@ -231,6 +234,7 @@ void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data){
 		returndata->datalen = 0;
 		SendToFd(epollfd, sockfd, returndata,sizeof(struct HEAD_RETURN));		
 	}else if(data->datamode == 1){//用户发送数据
+		printf("[mode senttosend]\n");
 		struct client_to_server_send_to_user_head senddata_head;
 		Recv(sockfd,&senddata_head,sizeof(senddata_head),0);
 		void* senddata = malloc(senddata_head.len);
@@ -265,6 +269,7 @@ void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data){
 
 
 	}else if(data->datamode==2){// show list
+		printf("[mode showlist]\n");
 		int loginusernum = g_hash_table_size(User2Nick);
 		struct HEAD_RETURN* returndata = (struct HEAD_RETURN*)malloc(sizeof(struct HEAD_RETURN));
 		bzero(returndata,sizeof(struct HEAD_RETURN));
