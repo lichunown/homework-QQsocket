@@ -62,6 +62,11 @@ struct server_to_client_send_to_user_head{
 	char username[16];
 	int len;
 }server_to_client_send_to_user_head;
+
+struct list_per_user{
+	char username[16];
+	char nickname[16];
+}list_per_user;
 // struct HEAD_SEND_BY_FIFO{
 // 	size_t len;
 // }HEAD_SEND_BY_FIFO;

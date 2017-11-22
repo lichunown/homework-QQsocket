@@ -32,6 +32,9 @@ void add_event(int epollfd,int fd,int state);
 void delete_event(int epollfd,int fd,int state);
 void modify_event(int epollfd,int fd,int state);
 
+
+void iteratorUser2Nick(char* username, char* nickname, int* sockfd);
+
 GHashTable* User2Sock;// 用户名到sockfd
 GHashTable* Token2User;// token 到用户名
 GHashTable* User2Nick;// 用户名到昵称
@@ -40,7 +43,7 @@ GHashTable* sock2data;// 向sockfd发送的临时数据
 
 sqlite3* db = NULL;
 
-
+int epollfd;
 
 int main(int argv,char* args[]){   
 	db = databaseInit();
@@ -52,7 +55,7 @@ int main(int argv,char* args[]){
 	sock2data = g_hash_table_new_full(g_str_hash, g_str_equal,g_free,g_free);
 
 	int port = 8001;
-	int epollfd = epoll_create(MAX_EVENTS);  
+	epollfd = epoll_create(MAX_EVENTS);  
 	struct epoll_event eventList[MAX_EVENTS];  
 
     int timeout = -1;  
@@ -262,11 +265,26 @@ void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data){
 
 
 	}else if(data->datamode==2){// show list
-
+		int loginusernum = g_hash_table_size(User2Nick);
+		struct HEAD_RETURN* returndata = (struct HEAD_RETURN*)malloc(sizeof(struct HEAD_RETURN));
+		bzero(returndata,sizeof(struct HEAD_RETURN));
+		returndata->mode = 22;
+		returndata->datalen = loginusernum*sizeof(list_per_user);
+		SendToFd(epollfd, sockfd, returndata, sizeof(struct HEAD_RETURN));
+		g_hash_table_foreach(User2Nick, (GHFunc)iteratorUser2Nick, &sockfd);
 	}else{
 
 	}
 }
+
+void iteratorUser2Nick(char* username, char* nickname, int* sockfd){
+	struct list_per_user* perdata = (struct list_per_user*)malloc(sizeof(struct list_per_user));
+	strcpy(perdata->username, username);
+	strcpy(perdata->nickname, nickname);
+	printf("[have login] %s:%s \n", username, nickname);
+	SendToFd(epollfd, *sockfd, perdata, sizeof(struct list_per_user));
+}
+
 
 void SendData(int epollfd, struct epoll_event* event){// 服务器发送数据
 	// printf("SendData function start   event.fd:%d\n",event->data.fd);
