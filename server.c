@@ -144,20 +144,20 @@ void userDataProcess(int epollfd,int sockfd, struct HEAD_USER* data){
 		printf("\t\tlogmode = 0  [signup]\n");
 		printf("\t\tusername = `%s` password = `%s` nickname = `%s` \n",data->username,data->password,data->nickname);
 		int r = sql_createUser(db,data->username,data->password,data->nickname);
-		struct HEAD_RETURN returndata;
-		bzero(&returndata,sizeof(returndata));
+		struct HEAD_RETURN* returndata = (struct HEAD_RETURN*)malloc(sizeof(struct HEAD_RETURN));
+		bzero(returndata,sizeof(struct HEAD_RETURN));
 		if(r){// 用户注册成功
 			printf("signup successful.\n");
-			returndata.mode = 12;
-			returndata.succ = 0;
-			returndata.datalen = 0;
-			SendToFd(epollfd, sockfd, &returndata,sizeof(returndata));
+			returndata->mode = 12;
+			returndata->succ = 0;
+			returndata->datalen = 0;
+			SendToFd(epollfd, sockfd, returndata,sizeof(struct HEAD_RETURN));
 		}else{// 用户注册失败
 			printf("signup error.\n");
-			returndata.mode = 12;
-			returndata.succ = 1;
-			returndata.datalen = 0;
-			SendToFd(epollfd, sockfd, &returndata,sizeof(returndata));
+			returndata->mode = 12;
+			returndata->succ = 1;
+			returndata->datalen = 0;
+			SendToFd(epollfd, sockfd, returndata,sizeof(struct HEAD_RETURN));
 		}
 	}else if(data->logmode==1){// 登录
 		printf("\t\tlogmode = 1  [login]\n");
@@ -165,20 +165,20 @@ void userDataProcess(int epollfd,int sockfd, struct HEAD_USER* data){
 		char* nickname = (char*)malloc(16);
 		int r = sql_login(db,data->username,data->password,&nickname);
 		if(r){// 用户登录成功
-			struct HEAD_RETURN returnhead;
-			struct server_login_return returndata;
-			bzero(&returnhead,sizeof(returnhead));	
-			bzero(&returndata,sizeof(returndata));		
+			struct HEAD_RETURN* returnhead = malloc(sizeof(struct HEAD_RETURN));
+			struct server_login_return* returndata = malloc(sizeof(struct server_login_return));
+			bzero(returnhead,sizeof(struct HEAD_RETURN));	
+			bzero(returndata,sizeof(struct server_login_return));		
 			printf("\tlogin succeed\n");
-			returnhead.mode = (char)11;
-			returnhead.succ = 0;
+			returnhead->mode = (char)11;
+			returnhead->succ = 0;
             // TODO ***************
-			returnhead.datalen = htonl(48);//htons((int)sizeof(struct server_login_return));
-			printf("return head:  %p\n",&returnhead);
-			print16((char*)&returnhead,sizeof(returnhead));
-			strcpy(returndata.nickname,data->username);
+			returnhead->datalen = sizeof(struct server_login_return);
+			printf("return head:  %p\n",returnhead);
+			print16((char*)returnhead,sizeof(struct HEAD_RETURN));
+			strcpy(returndata->nickname,data->username);
 			char* token = createToken(32);
-			memcpy(returndata.token, token,32);
+			memcpy(returndata->token, token,32);
 			// printf("create return data\n");
 
 			char* username = (char*)malloc(16);
@@ -193,16 +193,16 @@ void userDataProcess(int epollfd,int sockfd, struct HEAD_USER* data){
 			strcpy(nickname,data->nickname);
 			g_hash_table_insert(User2Nick,username,nickname);
 
-			SendToFd(epollfd, sockfd, &returnhead,sizeof(returnhead));
-			SendToFd(epollfd, sockfd, &returndata,sizeof(returndata));
+			SendToFd(epollfd, sockfd, returnhead,sizeof(struct HEAD_RETURN));
+			SendToFd(epollfd, sockfd, returndata,sizeof(struct server_login_return));
 		}else{// 登录失败
 			printf("\tlogin error\n");
-			struct HEAD_RETURN returndata;
-			bzero(&returndata,sizeof(returndata));
-			returndata.mode = 11;
-			returndata.succ = 1;
-			returndata.datalen = 0;
-			SendToFd(epollfd, sockfd, &returndata,sizeof(returndata));
+			struct HEAD_RETURN* returndata = (struct HEAD_RETURN*)malloc(sizeof(struct HEAD_RETURN));
+			bzero(returndata,sizeof(struct HEAD_RETURN));
+			returndata->mode = 11;
+			returndata->succ = 1;
+			returndata->datalen = 0;
+			SendToFd(epollfd, sockfd, returndata,sizeof(returndata));
 		}
 		free(nickname);
 	}
@@ -210,24 +210,24 @@ void userDataProcess(int epollfd,int sockfd, struct HEAD_USER* data){
 void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data){
 	char* username = g_hash_table_lookup(Token2User,data->token);
 	if(username==NULL){//用户不存在
-		struct HEAD_RETURN returndata;
-		bzero(&returndata,sizeof(returndata));
-		returndata.mode = 50;
-		returndata.succ = 1;
-		returndata.datalen = 1;
-		SendToFd(epollfd, sockfd, &returndata,sizeof(returndata));
+		struct HEAD_RETURN* returndata = malloc(sizeof(struct HEAD_RETURN));
+		bzero(returndata,sizeof(struct HEAD_RETURN));
+		returndata->mode = 50;
+		returndata->succ = 1;
+		returndata->datalen = 1;
+		SendToFd(epollfd, sockfd, returndata,sizeof(struct HEAD_RETURN));
 	}
 	if(data->datamode==0){//登出
-		struct HEAD_RETURN returndata;
-		bzero(&returndata,sizeof(returndata));
+		struct HEAD_RETURN* returndata = (struct HEAD_RETURN*)malloc(sizeof(struct HEAD_RETURN));
+		bzero(returndata,sizeof(struct HEAD_RETURN));
 		g_hash_table_remove(User2Sock, username);
 		g_hash_table_remove(User2Nick, username);
 		g_hash_table_remove(Token2User, data->token);
-		returndata.mode = 21;
-		returndata.succ = 0;
-		returndata.datalen = 0;
-		SendToFd(epollfd, sockfd, &returndata,sizeof(returndata));		
-	}else if(data->datamode==1){//用户发送数据
+		returndata->mode = 21;
+		returndata->succ = 0;
+		returndata->datalen = 0;
+		SendToFd(epollfd, sockfd, returndata,sizeof(struct HEAD_RETURN));		
+	}else if(data->datamode == 1){//用户发送数据
 		struct client_to_server_send_to_user_head senddata_head;
 		Recv(sockfd,&senddata_head,sizeof(senddata_head),0);
 		void* senddata = malloc(senddata_head.len);
@@ -244,21 +244,21 @@ void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data){
 		}
 		int user2sockfd = atoi(s_user2sockfd);
 		/************/
-		struct HEAD_RETURN user2head;
-		struct server_to_client_send_to_user_head user2data_head;
-		strcpy(user2data_head.username,username);
-		user2data_head.len = senddata_head.len;
-		user2head.mode = 99;
-		user2head.succ = 0;
-		user2head.datalen = (int)sizeof(user2data_head)+senddata_head.len;
-		SendToFd(epollfd, user2sockfd, &user2head,sizeof(user2head));
-		SendToFd(epollfd, user2sockfd, &user2data_head, sizeof(user2data_head));
+		struct HEAD_RETURN* user2head = (struct HEAD_RETURN*)malloc(sizeof(struct HEAD_RETURN));
+		struct server_to_client_send_to_user_head* user2data_head = (struct server_to_client_send_to_user_head*)malloc(sizeof(struct server_to_client_send_to_user_head));
+		strcpy(user2data_head->username,username);
+		user2data_head->len = senddata_head.len;
+		user2head->mode = 99;
+		user2head->succ = 0;
+		user2head->datalen = (int)sizeof(struct server_to_client_send_to_user_head)+senddata_head.len;
+		SendToFd(epollfd, user2sockfd, user2head,sizeof(struct HEAD_RETURN));
+		SendToFd(epollfd, user2sockfd, user2data_head, sizeof(struct server_to_client_send_to_user_head));
 		SendToFd(epollfd, user2sockfd, senddata, senddata_head.len);
-		struct HEAD_RETURN sendtouser1;
-		bzero(&sendtouser1,sizeof(sendtouser1));
-		sendtouser1.mode = 20;
-		sendtouser1.succ = 0;
-		SendToFd(epollfd, sockfd, &sendtouser1, sizeof(sendtouser1));
+		struct HEAD_RETURN* sendtouser1 = (struct HEAD_RETURN*)malloc(sizeof(struct HEAD_RETURN));
+		bzero(sendtouser1,sizeof(struct HEAD_RETURN));
+		sendtouser1->mode = 20;
+		sendtouser1->succ = 0;
+		SendToFd(epollfd, sockfd, sendtouser1, sizeof(struct HEAD_RETURN));
 
 
 	}else if(data->datamode==2){// show list
@@ -277,9 +277,9 @@ void SendData(int epollfd, struct epoll_event* event){// 服务器发送数据
 	while(senddata != NULL){// 循环读入数据链表，发送数据并free已发送数据
 		printf("send list....... %p  next:%p\n",senddata,senddata->next);
 		printf("Send: len:%d   data address:%p\n ",senddata->len,senddata->data);
-		print16(senddata->data,8);
-		print16(senddata->data,8);
+		// print16(senddata->data,8);
 		Send(sockfd,senddata->data,senddata->len,0);
+		free(senddata->data);
 		struct SEND_DATA* temp = senddata;
 		senddata = senddata->next;
 		free(temp);
@@ -302,13 +302,13 @@ void SendToFd(int epollfd, int sockfd,void* data,int size){// 向sockfd发送数
 
 	if(str_datap==NULL){
         printf("sock2data create new   %p data:%p \n",newdata,data);
-        print16(data,8);
+        // print16(data,8);
 		g_hash_table_insert(sock2data,itoa(sockfd),ptoa(newdata));
 	}else{
 		struct SEND_DATA* sendlist = (struct SEND_DATA*)atol(str_datap);
         printf("sock2data add new  %p  data:%p\n",newdata,data);
 		while(sendlist->next != NULL){
-			print16(sendlist->data,8);
+			// print16(sendlist->data,8);
 			sendlist = sendlist->next;
 		}
 		sendlist->next = newdata;
