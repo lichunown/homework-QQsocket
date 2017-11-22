@@ -14,7 +14,7 @@ struct HEAD_USER{
 	char username[16];
 	char password[16];
 	char nickname[16];
-	char _blank[6]; // because of offset, it's hard to make 
+	// char _blank[6]; // because of offset, it's hard to make 
 				    //sure that sizeof HEAD_USER == sizeof HEAD_DATA
 }HEAD_USER;
 

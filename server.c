@@ -284,9 +284,10 @@ void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data){
 
 void iteratorUser2Nick(char* username, char* nickname, int* sockfd){
 	struct list_per_user* perdata = (struct list_per_user*)malloc(sizeof(struct list_per_user));
+	bzero(perdata,sizeof(struct list_per_user));
 	strcpy(perdata->username, username);
 	strcpy(perdata->nickname, nickname);
-	printf("[have login] %s:%s \n", username, nickname);
+	printf("[have login]: %s:%s \n", username, nickname);
 	SendToFd(epollfd, *sockfd, perdata, sizeof(struct list_per_user));
 }
 
