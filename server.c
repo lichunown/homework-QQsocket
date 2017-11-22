@@ -287,15 +287,13 @@ void iteratorUser2Nick(char* username, char* nickname, int* sockfd){
 
 
 void SendData(int epollfd, struct epoll_event* event){// 服务器发送数据
-	// printf("SendData function start   event.fd:%d\n",event->data.fd);
 	int sockfd = event->data.fd;
 	char* str_sockfd = itoa(sockfd);
 	char* str_datap = g_hash_table_lookup(sock2data,str_sockfd);//寻找发送到sockfd的数据
 	struct SEND_DATA* senddata = (struct SEND_DATA*)atol(str_datap);
 	while(senddata != NULL){// 循环读入数据链表，发送数据并free已发送数据
-		printf("send list....... %p  next:%p\n",senddata,senddata->next);
-		printf("Send: len:%d   data address:%p\n ",senddata->len,senddata->data);
-		// print16(senddata->data,8);
+		// printf("send list....... %p  next:%p\n",senddata,senddata->next);
+		// printf("Send: len:%d   data address:%p\n ",senddata->len,senddata->data);
 		Send(sockfd,senddata->data,senddata->len,0);
 		free(senddata->data);
 		struct SEND_DATA* temp = senddata;
@@ -319,12 +317,12 @@ void SendToFd(int epollfd, int sockfd,void* data,int size){// 向sockfd发送数
 	newdata->next = NULL;
 
 	if(str_datap==NULL){
-        printf("sock2data create new   %p data:%p \n",newdata,data);
+        // printf("sock2data create new   %p data:%p \n",newdata,data);
         // print16(data,8);
 		g_hash_table_insert(sock2data,itoa(sockfd),ptoa(newdata));
 	}else{
 		struct SEND_DATA* sendlist = (struct SEND_DATA*)atol(str_datap);
-        printf("sock2data add new  %p  data:%p\n",newdata,data);
+        // printf("sock2data add new  %p  data:%p\n",newdata,data);
 		while(sendlist->next != NULL){
 			// print16(sendlist->data,8);
 			sendlist = sendlist->next;

@@ -24,7 +24,7 @@ server:
 	gcc -g -Wall server.c -o server $(glibdev) $(sqlite3dev)
 clean:
 	rm -f *.out test_server test_mystring test_sql test_hash test_server_epoll
-	rm -f client server
+	rm -f client server test_int_in_socket test_int_in_socket_server
 test:
 	make test_*
 	# make test_server 
