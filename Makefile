@@ -10,7 +10,7 @@ test_server:
 test_mystring:
 	gcc -g -Wall test_mystring.c -o test_mystring
 test_sql:
-	gcc -g -Wall test_sql.c -o test_sql -lsqlite3 #-L /usr/local/lib -lglib-2.0
+	gcc -g -Wall test_sql.c -o test_sql -lsqlite3
 test_hash:
 	gcc -g -Wall test_hash.c -o test_hash $(glibdev)
 test_server_epoll:
@@ -26,11 +26,11 @@ clean:
 	rm -f *.out test_server test_mystring test_sql test_hash test_server_epoll
 	rm -f client server test_int_in_socket test_int_in_socket_server
 test:
-	make test_*
-	# make test_server 
-	# make test_mystring 
-	# make test_sql 
-	# make test_hash
+	make test_server 
+	make test_mystring 
+	make test_sql 
+	make test_hash
+	make test_server_epoll
 all:
 	make 
 	make test
