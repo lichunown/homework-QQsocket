@@ -73,10 +73,10 @@ int main(int argv,char* args[]){
     event.data.fd = sockListen;  
     if(epoll_ctl(epollfd, EPOLL_CTL_ADD, sockListen, &event) < 0){  
         printf("epoll add fail : fd = %d\n", sockListen);  
-        return -1;  
+        exit(1);
     }  
     for(;;){                 
-        printf("start epoll....\n");
+        printf("\n\nstart epoll....\n");
         int ret = epoll_wait(epollfd, eventList, MAX_EVENTS, timeout);  
         if(ret < 0){  
             printf("epoll error\n");  
@@ -100,7 +100,6 @@ int main(int argv,char* args[]){
     }  
     close(epollfd);  
     close(sockListen);  
-    printf("test\n");  
     return 0;  
 }  
 
@@ -114,17 +113,17 @@ void AcceptConn(int epollfd, int srvfd){  // 新的客户端建立连接
     event.data.fd = clientfd;  
     event.events =  EPOLLIN; // 设置为接收消息模式 
     epoll_ctl(epollfd, EPOLL_CTL_ADD, clientfd, &event);  
-    printf("create & insert event:%p\n",&event);
+    // printf("create & insert event:%p\n",&event);
     g_hash_table_insert(sock2event, itoa(clientfd), ptoa(&event));
 }  
   
 //读取数据  
 void RecvData(int epollfd, int sockfd){  
-	printf("Recving data:%d\n",sockfd);
+	printf("Recving data from:%d\n",sockfd);
 	struct HEAD_MAIN head_main;
 	int n = Recv(sockfd,&head_main, sizeof(head_main),0);
 	if(n<=0){
-		printf("socked %d receive %d.  error\n",sockfd,n);
+		printf("sockfd %d receive %d.  error\n",sockfd,n);
 		char* sockfd_str = itoa(sockfd);
 		g_hash_table_remove(sock2event,sockfd_str);
 		g_hash_table_remove(sock2data,sockfd_str);
@@ -143,12 +142,12 @@ void RecvData(int epollfd, int sockfd){
 		delete_event(epollfd,sockfd,EPOLLIN);
 	}
 	if(head_main.mode==0){// user模式
-		printf("\t receive mode = 0  #USER mode#\n");
+		// printf("receive mode = 0  #USER mode#\n");
 		struct HEAD_USER data;
 		Recv(sockfd,&data, sizeof(data),0);
 		userDataProcess(epollfd,sockfd, &data);
 	}else if(head_main.mode==1){// data模式
-		printf("\t receive mode = 1  #DATA mode#\n");
+		// printf("receive mode = 1  #DATA mode#\n");
 		struct HEAD_DATA data;
 		Recv(sockfd,&data, sizeof(data),0);
 		dataDataProcess(epollfd,sockfd,&data);
@@ -162,25 +161,25 @@ void RecvData(int epollfd, int sockfd){
 void userDataProcess(int epollfd,int sockfd, struct HEAD_USER* data){
     /*处理用户登录模式的逻辑*/
 	if(data->logmode==0){ //注册
-		printf("[signup] username = `%s` password = `%s` nickname = `%s` \n",data->username,data->password,data->nickname);
+		printf("[sockfd %d]: [signup] username = `%s` password = `%s` nickname = `%s` \n",sockfd,data->username,data->password,data->nickname);
 		int r = sql_createUser(db,data->username,data->password,data->nickname);
 		if(r){// 用户注册成功
-			printf("signup successful.\n");
+			printf("[sockfd %d]: signup successful.\n",sockfd);
 			struct HEAD_RETURN* returndata = data_head_return(12,0,0);
 			SendToFd(epollfd, sockfd, returndata,sizeof(struct HEAD_RETURN));
 		}else{// 用户注册失败
-			printf("signup error.\n");
+			printf("[sockfd %d]: signup error.\n",sockfd);
 			struct HEAD_RETURN* returndata = data_head_return(12,1,0);
 			SendToFd(epollfd, sockfd, returndata,sizeof(struct HEAD_RETURN));
 		}
 	}else if(data->logmode==1){// 登录
-		printf("[login] username = `%s` password = `%s` \n",data->username,data->password);
+		printf("[sockfd %d]: [login] username = `%s` password = `%s` \n",sockfd,data->username,data->password);
 		char* nickname = (char*)malloc(16);
 		int r = sql_login(db,data->username,data->password,&nickname);
 		if(r){// 用户登录成功
 			struct server_login_return* returndata = malloc(sizeof(struct server_login_return));
 			bzero(returndata,sizeof(struct server_login_return));		
-			printf("\tlogin succeed\n");
+			printf("[sockfd %d]: login succeed\n",sockfd);
 			struct HEAD_RETURN* returnhead = data_head_return(11,0,sizeof(struct server_login_return));
 			// printf("return head:  %p\n",returnhead);
 			// print16((char*)returnhead,sizeof(struct HEAD_RETURN));
@@ -204,7 +203,7 @@ void userDataProcess(int epollfd,int sockfd, struct HEAD_USER* data){
 			SendToFd(epollfd, sockfd, returnhead,sizeof(struct HEAD_RETURN));
 			SendToFd(epollfd, sockfd, returndata,sizeof(struct server_login_return));
 		}else{// 登录失败
-			printf("\tlogin error\n");
+			printf("[sockfd %d]: login error\n",sockfd);
 			struct HEAD_RETURN* returndata = data_head_return(11,1,0);
 			SendToFd(epollfd, sockfd, returndata,sizeof(returndata));
 		}
@@ -215,20 +214,21 @@ void userDataProcess(int epollfd,int sockfd, struct HEAD_USER* data){
 void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data){
 	char* username = g_hash_table_lookup(Token2User,data->token);
 	if(username==NULL){//用户不存在
-		printf("user doesnt exist\n");
+		printf("[sockfd %d]: [user mode]: user doesnt exist\n",sockfd);
 		struct HEAD_RETURN* returndata = data_head_return(50,1,0);
 		SendToFd(epollfd, sockfd, returndata,sizeof(struct HEAD_RETURN));
 		return;
 	}
 	if(data->datamode==0){//登出
-		printf("[mode logout]\n");
+		printf("[sockfd %d]: [mode logout]\n",sockfd);
 		g_hash_table_remove(User2Sock, username);
 		g_hash_table_remove(User2Nick, username);
 		g_hash_table_remove(Token2User, data->token);
 		struct HEAD_RETURN* returndata = data_head_return(21,0,0);
-		SendToFd(epollfd, sockfd, returndata,sizeof(struct HEAD_RETURN));		
+		SendToFd(epollfd, sockfd, returndata,sizeof(struct HEAD_RETURN));	
+		printf("[sockfd %d]: logout succeed.\n",sockfd);	
 	}else if(data->datamode == 1){//用户发送数据
-		printf("[mode senttosend]\n");
+		printf("[sockfd %d]: mode senttosend\n",sockfd);
 		struct client_to_server_send_to_user_head senddata_head;
 		Recv(sockfd,&senddata_head,sizeof(senddata_head),0);
 		void* senddata = malloc(senddata_head.len);
@@ -236,28 +236,21 @@ void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data){
 
 		char* s_user2sockfd = g_hash_table_lookup(User2Sock, senddata_head.username);
 		if(s_user2sockfd==NULL){// 要发送的人不存在
+			printf("[sockfd %d]: sendto username:`%s` doesnt exist.\n",sockfd,senddata_head.username);
 			struct HEAD_RETURN* sendtouser1 = data_head_return(20,1,0);
 			SendToFd(epollfd, sockfd, sendtouser1, sizeof(struct HEAD_RETURN));
 			return;			
 		}
 		int user2sockfd = atoi(s_user2sockfd);
-		/************/
-		struct HEAD_RETURN* user2head = (struct HEAD_RETURN*)malloc(sizeof(struct HEAD_RETURN));
+		struct HEAD_RETURN* user2head = data_head_return(99,0,sizeof(struct server_to_client_send_to_user_head));
 		struct server_to_client_send_to_user_head* user2data_head = (struct server_to_client_send_to_user_head*)malloc(sizeof(struct server_to_client_send_to_user_head));
 		strcpy(user2data_head->username,username);
 		user2data_head->len = senddata_head.len;
-		user2head->mode = 99;
-		user2head->succ = 0;
-		user2head->datalen = (int)sizeof(struct server_to_client_send_to_user_head);
 		SendToFd(epollfd, user2sockfd, user2head,sizeof(struct HEAD_RETURN));
 		SendToFd(epollfd, user2sockfd, user2data_head, sizeof(struct server_to_client_send_to_user_head));
 		SendToFd(epollfd, user2sockfd, senddata, senddata_head.len);
-		struct HEAD_RETURN* sendtouser1 = (struct HEAD_RETURN*)malloc(sizeof(struct HEAD_RETURN));
-		bzero(sendtouser1,sizeof(struct HEAD_RETURN));
-		sendtouser1->mode = 20;
-		sendtouser1->succ = 0;
+		struct HEAD_RETURN* sendtouser1 = data_head_return(20,0,0);
 		SendToFd(epollfd, sockfd, sendtouser1, sizeof(struct HEAD_RETURN));
-
 
 	}else if(data->datamode==2){// show list
 		printf("[mode showlist]\n");
