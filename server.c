@@ -164,19 +164,13 @@ void userDataProcess(int epollfd,int sockfd, struct HEAD_USER* data){
 		printf("\t\tlogmode = 0  [signup]\n");
 		printf("\t\tusername = `%s` password = `%s` nickname = `%s` \n",data->username,data->password,data->nickname);
 		int r = sql_createUser(db,data->username,data->password,data->nickname);
-		struct HEAD_RETURN* returndata = (struct HEAD_RETURN*)malloc(sizeof(struct HEAD_RETURN));
-		bzero(returndata,sizeof(struct HEAD_RETURN));
 		if(r){// 用户注册成功
 			printf("signup successful.\n");
-			returndata->mode = 12;
-			returndata->succ = 0;
-			returndata->datalen = 0;
+			struct HEAD_RETURN* returndata = data_head_return(12,0,0);
 			SendToFd(epollfd, sockfd, returndata,sizeof(struct HEAD_RETURN));
 		}else{// 用户注册失败
 			printf("signup error.\n");
-			returndata->mode = 12;
-			returndata->succ = 1;
-			returndata->datalen = 0;
+			struct HEAD_RETURN* returndata = data_head_return(12,1,0);
 			SendToFd(epollfd, sockfd, returndata,sizeof(struct HEAD_RETURN));
 		}
 	}else if(data->logmode==1){// 登录
@@ -185,15 +179,10 @@ void userDataProcess(int epollfd,int sockfd, struct HEAD_USER* data){
 		char* nickname = (char*)malloc(16);
 		int r = sql_login(db,data->username,data->password,&nickname);
 		if(r){// 用户登录成功
-			struct HEAD_RETURN* returnhead = malloc(sizeof(struct HEAD_RETURN));
 			struct server_login_return* returndata = malloc(sizeof(struct server_login_return));
-			bzero(returnhead,sizeof(struct HEAD_RETURN));	
 			bzero(returndata,sizeof(struct server_login_return));		
 			printf("\tlogin succeed\n");
-			returnhead->mode = (char)11;
-			returnhead->succ = 0;
-            // TODO ***************
-			returnhead->datalen = sizeof(struct server_login_return);
+			struct HEAD_RETURN* returnhead = data_head_return(11,0,sizeof(struct server_login_return));
 			printf("return head:  %p\n",returnhead);
 			print16((char*)returnhead,sizeof(struct HEAD_RETURN));
 			strcpy(returndata->nickname,data->username);
@@ -232,11 +221,7 @@ void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data){
 	char* username = g_hash_table_lookup(Token2User,data->token);
 	if(username==NULL){//用户不存在
 		printf("user doesnt exist\n");
-		struct HEAD_RETURN* returndata = malloc(sizeof(struct HEAD_RETURN));
-		bzero(returndata,sizeof(struct HEAD_RETURN));
-		returndata->mode = 50;
-		returndata->succ = 1;
-		returndata->datalen = 1;
+		struct HEAD_RETURN* returndata = data_head_return(50,1,0);
 		SendToFd(epollfd, sockfd, returndata,sizeof(struct HEAD_RETURN));
 		return;
 	}
@@ -260,11 +245,8 @@ void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data){
 
 		char* s_user2sockfd = g_hash_table_lookup(User2Sock, senddata_head.username);
 		if(s_user2sockfd==NULL){// 要发送的人不存在
-			struct HEAD_RETURN sendtouser1;
-			bzero(&sendtouser1,sizeof(sendtouser1));
-			sendtouser1.mode = 20;
-			sendtouser1.succ = 1;
-			SendToFd(epollfd, sockfd, &sendtouser1, sizeof(sendtouser1));
+			struct HEAD_RETURN* sendtouser1 = data_head_return(20,1,0);
+			SendToFd(epollfd, sockfd, sendtouser1, sizeof(struct HEAD_RETURN));
 			return;			
 		}
 		int user2sockfd = atoi(s_user2sockfd);
@@ -275,7 +257,7 @@ void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data){
 		user2data_head->len = senddata_head.len;
 		user2head->mode = 99;
 		user2head->succ = 0;
-		user2head->datalen = (int)sizeof(struct server_to_client_send_to_user_head)+senddata_head.len;
+		user2head->datalen = (int)sizeof(struct server_to_client_send_to_user_head);
 		SendToFd(epollfd, user2sockfd, user2head,sizeof(struct HEAD_RETURN));
 		SendToFd(epollfd, user2sockfd, user2data_head, sizeof(struct server_to_client_send_to_user_head));
 		SendToFd(epollfd, user2sockfd, senddata, senddata_head.len);

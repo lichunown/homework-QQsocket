@@ -101,6 +101,15 @@ struct HEAD_USER_ALL* data_signup(char* username,char* password,char* nickname){
 	strcpy(data->user.nickname,nickname);
 	return data;
 }
+
+struct HEAD_RETURN* data_head_return(char mode,char succ,unsigned int datalen){
+	struct HEAD_RETURN* data = (struct HEAD_RETURN*)malloc(sizeof(struct HEAD_RETURN));
+	bzero(data,sizeof(struct HEAD_RETURN));
+	data->mode = mode;
+	data->succ = succ;
+	data->datalen = datalen;
+	return data;
+}
 // struct HEAD_DATA_ALL* data_logout(char* token){
 // 	struct HEAD_DATA_ALL* data = (struct HEAD_DATA_ALL*)malloc(sizeof(HEAD_DATA_ALL));
 // 	bzero(data,sizeof(HEAD_DATA_ALL));

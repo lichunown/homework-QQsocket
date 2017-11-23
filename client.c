@@ -126,6 +126,18 @@ void checkresponse(int sockfd, struct HEAD_RETURN* receiveHead){
 			Recv(sockfd,&perdata,sizeof(struct list_per_user),0);
 			printf("\t %s: %s\n",perdata.username,perdata.nickname);
 		}
+	}else if(receiveHead->mode == 99 && receiveHead->succ == 0){
+		/*other send to here*/
+		struct server_to_client_send_to_user_head head_data;
+		assert(sizeof(head_data)==receiveHead->datalen);
+		Recv(sockfd,&head_data,sizeof(head_data),0);
+		printf("Recving data from %s:\n",head_data.username);
+		char* data = (char*)malloc(head_data.len);
+		Recv(sockfd,data,head_data.len,0);
+		printf("%s\n\n",data);
+	}else if(receiveHead->mode == 20 && receiveHead->succ == 0){
+		/*other send to here*/
+		printf("send to other user succeed\n");
 	}
 	else {
 		//printf("Test???\n:`%s`\n",(char*)receiveHead);
@@ -186,7 +198,27 @@ void client_logout(int sockfd,char* data){
 
 }
 void client_sendto(int sockfd,char* data){
-	
+	//token sendto_username data
+	char** splitdata = split_num(data,3);
+	char* token = splitdata[0];
+	char* sendto_username = splitdata[1];
+	char* senddata = splitdata[2];
+	struct HEAD_MAIN head_main;
+	head_main.mode = 1;
+	Send(sockfd,&head_main,sizeof(head_main),0);
+	struct HEAD_DATA head_data;
+	bzero(&head_data,sizeof(head_data));
+	strcpy(head_data.token,token);
+	head_data.datamode = 1;
+	head_data.datalen = sizeof(struct client_to_server_send_to_user_head);
+	Send(sockfd,&head_data,sizeof(head_data),0);
+	struct client_to_server_send_to_user_head send_head;
+	bzero(&send_head,sizeof(send_head));
+	strcpy(send_head.username,sendto_username);
+	send_head.len = strlen(senddata)+1;
+	Send(sockfd,&send_head,sizeof(send_head),0);
+	Send(sockfd,&senddata,send_head.len,0);
+	free_splitdata_num(splitdata,3);
 }
 
 void client_showlist(int sockfd,char* token){
