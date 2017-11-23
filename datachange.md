@@ -51,6 +51,7 @@ struct HEAD_RETURN{
 | ----------------------- | ---- | ------ | ------- |
 | login（登录）               | 11   | 0 or 1 | `len`   |
 | signup（注册）              | 12   | 0 or 1 | 0       |
+| another user login              | 13   | 0 or 1 | 0       |
 | logout（登出）              | 21   | 0 or 1 | 0       |
 | showlist（显示在线用户列表）      | 22   | 0 or 1 | `len`   |
 | senddata（自己的消息是否成功）     | 20   | 0 or 1 | `len`   |

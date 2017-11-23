@@ -177,6 +177,17 @@ void userDataProcess(int epollfd,int sockfd, struct HEAD_USER* data){
 		char* nickname = (char*)malloc(16);
 		int r = sql_login(db,data->username,data->password,&nickname);
 		if(r){// 用户登录成功
+			char* lasttoken = find_g_hash_by_value(Token2User, data->username);
+			if(lasttoken != NULL){
+				char* s_lastsockfd = g_hash_table_lookup(User2Sock,data->username);
+				if(s_lastsockfd != NULL){
+					struct HEAD_RETURN* returnhead = data_head_return(13,0,0);
+					int lastsockfd = atoi(s_lastsockfd);
+					SendToFd(epollfd, lastsockfd, returnhead,sizeof(struct HEAD_RETURN));					
+				}		
+				g_hash_table_remove(Token2User,lasttoken);
+
+			}
 			struct server_login_return* returndata = malloc(sizeof(struct server_login_return));
 			bzero(returndata,sizeof(struct server_login_return));		
 			printf("[sockfd %d]: login succeed\n",sockfd);

@@ -119,6 +119,8 @@ void checkresponse(int sockfd, struct HEAD_RETURN* receiveHead){
 		login_ok(data);
 	}else if(receiveHead->mode == 12 && receiveHead->succ == 0){
 		printf("Please login use the new username.");
+	}else if(receiveHead->mode == 13 && receiveHead->succ == 0){
+		printf("[warning]: logout\nBecause another client login in this username.\n");
 	}else if(receiveHead->mode == 22 && receiveHead->succ == 0){
 		printf("LOGIN User:   length=%d\n",length);
 		for(int i = 0;i<length/sizeof(struct list_per_user);i++){
