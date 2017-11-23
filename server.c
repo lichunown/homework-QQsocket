@@ -122,13 +122,14 @@ void RecvData(int epollfd, int sockfd){
 	printf("Recving data from:%d\n",sockfd);
 	struct HEAD_MAIN head_main;
 	int n = Recv(sockfd,&head_main, sizeof(head_main),0);
-	if(n<=0){
+	if(n<=0){// 客户端异常退出
 		printf("sockfd %d receive %d.  error\n",sockfd,n);
 		char* sockfd_str = itoa(sockfd);
+        /*删除sockfd*/
 		g_hash_table_remove(sock2event,sockfd_str);
 		g_hash_table_remove(sock2data,sockfd_str);
 		char* username = find_g_hash_by_value(User2Sock,sockfd_str);
-		if(username != NULL){
+		if(username != NULL){// 删除登录用户数据
 			printf("delete login user `%s`\n",username);
 			g_hash_table_remove(User2Nick,username);
 			g_hash_table_remove(User2Sock,username);
@@ -178,15 +179,14 @@ void userDataProcess(int epollfd,int sockfd, struct HEAD_USER* data){
 		int r = sql_login(db,data->username,data->password,&nickname);
 		if(r){// 用户登录成功
 			char* lasttoken = find_g_hash_by_value(Token2User, data->username);
-			if(lasttoken != NULL){
+			if(lasttoken != NULL){// 删除以前登录的用户数据
 				char* s_lastsockfd = g_hash_table_lookup(User2Sock,data->username);
-				if(s_lastsockfd != NULL){
+				if(s_lastsockfd != NULL){// 向被挤掉的用户发送提示消息
 					struct HEAD_RETURN* returnhead = data_head_return(13,0,0);
 					int lastsockfd = atoi(s_lastsockfd);
 					SendToFd(epollfd, lastsockfd, returnhead,sizeof(struct HEAD_RETURN));					
 				}		
 				g_hash_table_remove(Token2User,lasttoken);
-
 			}
 			struct server_login_return* returndata = malloc(sizeof(struct server_login_return));
 			bzero(returndata,sizeof(struct server_login_return));		
@@ -198,7 +198,7 @@ void userDataProcess(int epollfd,int sockfd, struct HEAD_USER* data){
 			char* token = createToken(32);
 			memcpy(returndata->token, token,32);
 			// printf("create return data\n");
-
+            /*将登录用户数据记入哈希表*/
 			char* username = (char*)malloc(16);
 			strcpy(username,data->username);
 			g_hash_table_insert(User2Sock,username,itoa(sockfd));
@@ -263,7 +263,7 @@ void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data){
 		struct HEAD_RETURN* sendtouser1 = data_head_return(20,0,0);
 		SendToFd(epollfd, sockfd, sendtouser1, sizeof(struct HEAD_RETURN));
 
-	}else if(data->datamode==2){// show list
+	}else if(data->datamode==2){// 显示所有已登录用户信息
 		printf("[mode showlist]\n");
 		int loginusernum = g_hash_table_size(User2Nick);
 		struct HEAD_RETURN* returndata = data_head_return(22,0,loginusernum*sizeof(list_per_user));
