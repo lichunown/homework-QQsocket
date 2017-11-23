@@ -128,13 +128,11 @@ void checkresponse(int sockfd, struct HEAD_RETURN* receiveHead){
 		}
 	}else if(receiveHead->mode == 99 && receiveHead->succ == 0){
 		/*other send to here*/
-		struct server_to_client_send_to_user_head head_data;
-		assert(sizeof(head_data)==receiveHead->datalen);
-		Recv(sockfd,&head_data,sizeof(head_data),0);
-		printf("Recving data from %s:\n",head_data.username);
-		char* data = (char*)malloc(head_data.len);
-		Recv(sockfd,data,head_data.len,0);
-		printf("%s\n\n",data);
+		struct server_to_client_send_to_user_head* head_data = (struct server_to_client_send_to_user_head*)data;
+		printf("Recving data from %s:\n",head_data->username);
+		char* recvdata = (char*)malloc(head_data->len);
+		Recv(sockfd,recvdata,head_data->len,0);
+		printf("%s\n\n",recvdata);
 	}else if(receiveHead->mode == 20 && receiveHead->succ == 0){
 		/*other send to here*/
 		printf("send to other user succeed\n");
@@ -217,7 +215,7 @@ void client_sendto(int sockfd,char* data){
 	strcpy(send_head.username,sendto_username);
 	send_head.len = strlen(senddata)+1;
 	Send(sockfd,&send_head,sizeof(send_head),0);
-	Send(sockfd,&senddata,send_head.len,0);
+	Send(sockfd,senddata,send_head.len,0);
 	free_splitdata_num(splitdata,3);
 }
 

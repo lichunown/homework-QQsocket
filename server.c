@@ -233,7 +233,7 @@ void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data){
 		Recv(sockfd,&senddata_head,sizeof(senddata_head),0);
 		void* senddata = malloc(senddata_head.len);
 		Recv(sockfd,senddata,senddata_head.len,0);
-
+		printf("[sockfd%d to user:%s]:`%s`\n",sockfd,senddata_head.username,(char*)senddata);
 		char* s_user2sockfd = g_hash_table_lookup(User2Sock, senddata_head.username);
 		if(s_user2sockfd==NULL){// 要发送的人不存在
 			printf("[sockfd %d]: sendto username:`%s` doesnt exist.\n",sockfd,senddata_head.username);
