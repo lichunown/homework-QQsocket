@@ -46,6 +46,16 @@ pkg-config glib-2.0 --libs
 sudo cp -r /usr/local/include/glib-2.0/* /usr/include/  
 sudo cp /usr/local/lib/glib-2.0/include/glibconfig.h /usr/include/
 ```
+or (Linux下静态编译glib)[ https://www.cnblogs.com/tiantao/archive/2012/04/23/2466942.html]
+
+```
+./configure --prefix=/usr/local/glib --enable-static --disable-shared CFLAGS="-static"
+```
+
+
+
+
+
 (ubuntu完整安装glib心得)[http://blog.csdn.net/andylauren/article/details/51346388]
 
 - build test

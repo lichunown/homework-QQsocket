@@ -1,4 +1,4 @@
-glibdev = -L /usr/local/lib -lglib-2.0
+glibdev = -L /usr/local/lib -l glib-2.0
 sqlite3dev = -lsqlite3
 
 default:
@@ -15,9 +15,9 @@ test_htons:
 	gcc -Wall test_int_in_socket.c -o test_int_in_socket
 	gcc -Wall test_int_in_socket_server.c -o test_int_in_socket_server
 client:
-	gcc -Wall client.c -o client
+	gcc -Wall client.c -o client -static
 server:
-	gcc -g -Wall server.c -o server $(glibdev) $(sqlite3dev)
+	gcc -g -Wall server.c -o server $(glibdev) $(sqlite3dev) 
 clean:
 	rm -f *.out test_server test_mystring test_sql test_hash test_server_epoll
 	rm -f client server test_int_in_socket test_int_in_socket_server
