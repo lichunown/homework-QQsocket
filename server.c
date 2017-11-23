@@ -13,7 +13,7 @@ author:lcy
 #include <sys/epoll.h>  
 #include <glib.h>
 #include <stdlib.h>
-
+#include "g_hash_extend.c"
 //最多处理的connect  
 #define MAX_EVENTS 100  
 
@@ -32,8 +32,10 @@ void add_event(int epollfd,int fd,int state);
 void delete_event(int epollfd,int fd,int state);
 void modify_event(int epollfd,int fd,int state);
 
-
 void iteratorUser2Nick(char* username, char* nickname, int* sockfd);
+
+
+
 
 GHashTable* User2Sock;// 用户名到sockfd
 GHashTable* Token2User;// token 到用户名
@@ -116,24 +118,39 @@ void AcceptConn(int epollfd, int srvfd){  // 新的客户端建立连接
 }  
   
 //读取数据  
-void RecvData(int epollfd, int fd){  
-	printf("Recving data:%d\n",fd);
+void RecvData(int epollfd, int sockfd){  
+	printf("Recving data:%d\n",sockfd);
 	struct HEAD_MAIN head_main;
-	int n = Recv(fd,&head_main, sizeof(head_main),0);
+	int n = Recv(sockfd,&head_main, sizeof(head_main),0);
 	if(n<=0){
-		printf("socked %d receive %d.  error\n",fd,n);
-		delete_event(epollfd,fd,EPOLLIN);
+		printf("socked %d receive %d.  error\n",sockfd,n);
+		char* sockfd_str = itoa(sockfd);
+		g_hash_table_remove(sock2event,sockfd_str);
+		g_hash_table_remove(sock2data,sockfd_str);
+		char* username = find_g_hash_by_value(User2Sock,sockfd_str);
+		if(username != NULL){
+			printf("delete login user `%s`\n",username);
+			g_hash_table_remove(User2Nick,username);
+			g_hash_table_remove(User2Sock,username);
+			char* rmtoken = find_g_hash_by_value(Token2User,username);
+			if(rmtoken!=NULL){
+				printf("delete token `%s`\n",rmtoken);
+				g_hash_table_remove(Token2User,rmtoken);
+			}
+		}
+		free(sockfd_str);
+		delete_event(epollfd,sockfd,EPOLLIN);
 	}
 	if(head_main.mode==0){// user模式
 		printf("\t receive mode = 0  #USER mode#\n");
 		struct HEAD_USER data;
-		Recv(fd,&data, sizeof(data),0);
-		userDataProcess(epollfd,fd, &data);
+		Recv(sockfd,&data, sizeof(data),0);
+		userDataProcess(epollfd,sockfd, &data);
 	}else if(head_main.mode==1){// data模式
 		printf("\t receive mode = 1  #DATA mode#\n");
 		struct HEAD_DATA data;
-		Recv(fd,&data, sizeof(data),0);
-		dataDataProcess(epollfd,fd,&data);
+		Recv(sockfd,&data, sizeof(data),0);
+		dataDataProcess(epollfd,sockfd,&data);
 	}else{// 数据接收错误
 		//printf("\tdata err   or or This is a test string\n");
 		//SendToFd(epollfd,fd,"This is an echo.\n",sizeof("This is an echo.\n"));
@@ -210,6 +227,7 @@ void userDataProcess(int epollfd,int sockfd, struct HEAD_USER* data){
 		free(nickname);
 	}
 }
+
 void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data){
 	char* username = g_hash_table_lookup(Token2User,data->token);
 	if(username==NULL){//用户不存在

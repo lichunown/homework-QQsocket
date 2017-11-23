@@ -120,7 +120,7 @@ void checkresponse(int sockfd, struct HEAD_RETURN* receiveHead){
 	}else if(receiveHead->mode == 12 && receiveHead->succ == 0){
 		printf("Please login use the new username.");
 	}else if(receiveHead->mode == 22 && receiveHead->succ == 0){
-		printf("LOGIN User:\n");
+		printf("LOGIN User:   length=%d\n",length);
 		for(int i = 0;i<length/sizeof(struct list_per_user);i++){
 			struct list_per_user perdata;
 			Recv(sockfd,&perdata,sizeof(struct list_per_user),0);
