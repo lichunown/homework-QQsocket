@@ -63,6 +63,7 @@ make
 ```bash
 make all
 ```
+
 # [test](./test.md)
 
 
@@ -70,9 +71,7 @@ make all
 
 - 密码加密算法
 
-## bug
 
-- when use `#login` in client. response could receive nickname & token.but only token can read. 
 
 # 版本更新
 
@@ -82,3 +81,8 @@ make all
   - 由于c语言结构体存在对齐问题，决定删除HEAD_DATA_ALL数据结构，调用为两次发送HEAD_MAIN和HEAD_DATA。
   - 在HEAD_USER中删除为使HEAD_DATA_ALL 和HEAD_USER_ALL大小一样的补充占位char。
 - 新增展示登录用户功能`#showlist`
+
+## 2017-11-23 Version0.0.2
+- 支持两客户端之间的数据转发。真正具有QQ的数据传输功能。
+- 客户端异常结束时，服务器自动登出用户。
+- 同一用户名，只允许一个客户端存在。新登录的客户会将原有用户挤下线。

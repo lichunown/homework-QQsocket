@@ -47,16 +47,16 @@ struct HEAD_RETURN{
 }HEAD_RETURN;
 ```
 
-| discript                | mode | succ   | datalen |
-| ----------------------- | ---- | ------ | ------- |
-| login（登录）               | 11   | 0 or 1 | `len`   |
-| signup（注册）              | 12   | 0 or 1 | 0       |
-| another user login              | 13   | 0 or 1 | 0       |
-| logout（登出）              | 21   | 0 or 1 | 0       |
-| showlist（显示在线用户列表）      | 22   | 0 or 1 | `len`   |
-| senddata（自己的消息是否成功）     | 20   | 0 or 1 | `len`   |
-| receive data（其他人发送来的消息） | 99   | 0      | `len`   |
-| token error             | 50   | 1      | 0       |
+| discript                             | mode | succ   | datalen |
+| ------------------------------------ | ---- | ------ | ------- |
+| login（登录）                            | 11   | 0 or 1 | `len`   |
+| signup（注册）                           | 12   | 0 or 1 | 0       |
+| another user login（登录的用户被其他人登录，自动下线） | 13   | 0 or 1 | 0       |
+| logout（登出）                           | 21   | 0 or 1 | 0       |
+| showlist（显示在线用户列表）                   | 22   | 0 or 1 | `len`   |
+| senddata（自己的消息是否成功）                  | 20   | 0 or 1 | `len`   |
+| receive data（其他人发送来的消息）              | 99   | 0      | `len`   |
+| token error                          | 50   | 1      | 0       |
 
 **succ==0 successful; succ!=0 unsuccessful（0为成功）**
 
