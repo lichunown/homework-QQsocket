@@ -24,8 +24,9 @@ void SendData(int epollfd, struct epoll_event* event);
 void userDataProcess(int epollfd,int sockfd, struct HEAD_USER* data);
 void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data);
 
-void server_login(char* username,char* password);
-void server_signup(char* username,char* password,char* nickname);
+// void server_login(char* username,char* password);
+// void server_signup(char* username,char* password,char* nickname);
+
 void SendToFd(int epollfd, int sockfd,void* data,int size);
 
 void add_event(int epollfd,int fd,int state);
@@ -161,8 +162,7 @@ void RecvData(int epollfd, int sockfd){
 void userDataProcess(int epollfd,int sockfd, struct HEAD_USER* data){
     /*处理用户登录模式的逻辑*/
 	if(data->logmode==0){ //注册
-		printf("\t\tlogmode = 0  [signup]\n");
-		printf("\t\tusername = `%s` password = `%s` nickname = `%s` \n",data->username,data->password,data->nickname);
+		printf("[signup] username = `%s` password = `%s` nickname = `%s` \n",data->username,data->password,data->nickname);
 		int r = sql_createUser(db,data->username,data->password,data->nickname);
 		if(r){// 用户注册成功
 			printf("signup successful.\n");
@@ -174,8 +174,7 @@ void userDataProcess(int epollfd,int sockfd, struct HEAD_USER* data){
 			SendToFd(epollfd, sockfd, returndata,sizeof(struct HEAD_RETURN));
 		}
 	}else if(data->logmode==1){// 登录
-		printf("\t\tlogmode = 1  [login]\n");
-		printf("\t\tusername = `%s` password = `%s` \n",data->username,data->password);
+		printf("[login] username = `%s` password = `%s` \n",data->username,data->password);
 		char* nickname = (char*)malloc(16);
 		int r = sql_login(db,data->username,data->password,&nickname);
 		if(r){// 用户登录成功
@@ -183,8 +182,8 @@ void userDataProcess(int epollfd,int sockfd, struct HEAD_USER* data){
 			bzero(returndata,sizeof(struct server_login_return));		
 			printf("\tlogin succeed\n");
 			struct HEAD_RETURN* returnhead = data_head_return(11,0,sizeof(struct server_login_return));
-			printf("return head:  %p\n",returnhead);
-			print16((char*)returnhead,sizeof(struct HEAD_RETURN));
+			// printf("return head:  %p\n",returnhead);
+			// print16((char*)returnhead,sizeof(struct HEAD_RETURN));
 			strcpy(returndata->nickname,data->username);
 			char* token = createToken(32);
 			memcpy(returndata->token, token,32);
@@ -206,11 +205,7 @@ void userDataProcess(int epollfd,int sockfd, struct HEAD_USER* data){
 			SendToFd(epollfd, sockfd, returndata,sizeof(struct server_login_return));
 		}else{// 登录失败
 			printf("\tlogin error\n");
-			struct HEAD_RETURN* returndata = (struct HEAD_RETURN*)malloc(sizeof(struct HEAD_RETURN));
-			bzero(returndata,sizeof(struct HEAD_RETURN));
-			returndata->mode = 11;
-			returndata->succ = 1;
-			returndata->datalen = 0;
+			struct HEAD_RETURN* returndata = data_head_return(11,1,0);
 			SendToFd(epollfd, sockfd, returndata,sizeof(returndata));
 		}
 		free(nickname);
@@ -227,14 +222,10 @@ void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data){
 	}
 	if(data->datamode==0){//登出
 		printf("[mode logout]\n");
-		struct HEAD_RETURN* returndata = (struct HEAD_RETURN*)malloc(sizeof(struct HEAD_RETURN));
-		bzero(returndata,sizeof(struct HEAD_RETURN));
 		g_hash_table_remove(User2Sock, username);
 		g_hash_table_remove(User2Nick, username);
 		g_hash_table_remove(Token2User, data->token);
-		returndata->mode = 21;
-		returndata->succ = 0;
-		returndata->datalen = 0;
+		struct HEAD_RETURN* returndata = data_head_return(21,0,0);
 		SendToFd(epollfd, sockfd, returndata,sizeof(struct HEAD_RETURN));		
 	}else if(data->datamode == 1){//用户发送数据
 		printf("[mode senttosend]\n");
@@ -271,10 +262,7 @@ void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data){
 	}else if(data->datamode==2){// show list
 		printf("[mode showlist]\n");
 		int loginusernum = g_hash_table_size(User2Nick);
-		struct HEAD_RETURN* returndata = (struct HEAD_RETURN*)malloc(sizeof(struct HEAD_RETURN));
-		bzero(returndata,sizeof(struct HEAD_RETURN));
-		returndata->mode = 22;
-		returndata->datalen = loginusernum*sizeof(list_per_user);
+		struct HEAD_RETURN* returndata = data_head_return(22,0,loginusernum*sizeof(list_per_user));
 		SendToFd(epollfd, sockfd, returndata, sizeof(struct HEAD_RETURN));
 		g_hash_table_foreach(User2Nick, (GHFunc)iteratorUser2Nick, &sockfd);
 	}else{
