@@ -4,5 +4,7 @@ client
 test_hash
 server
 client.out
+test_int_in_socket_server
+test_int_in_socket
 test_mystring
 *.out
