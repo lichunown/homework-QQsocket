@@ -48,7 +48,10 @@ sqlite3* db = NULL;
 
 int epollfd;
 
-int main(int argv,char* args[]){   
+int main(int argv,char* args[]){ 
+	assert(sizeof(int)==4);
+	assert(sizeof(long)==8);
+	  
 	db = databaseInit();
     
 	User2Sock = g_hash_table_new_full(g_str_hash, g_str_equal,g_free,g_free);
@@ -252,6 +255,8 @@ void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data){
 			SendToFd(epollfd, sockfd, sendtouser1, sizeof(struct HEAD_RETURN));
 			return;			
 		}
+		struct HEAD_RETURN* sendtouser1 = data_head_return(20,0,0);
+		SendToFd(epollfd, sockfd, sendtouser1, sizeof(struct HEAD_RETURN));
 		int user2sockfd = atoi(s_user2sockfd);
 		struct HEAD_RETURN* user2head = data_head_return(99,0,sizeof(struct server_to_client_send_to_user_head));
 		struct server_to_client_send_to_user_head* user2data_head = (struct server_to_client_send_to_user_head*)malloc(sizeof(struct server_to_client_send_to_user_head));
@@ -260,8 +265,6 @@ void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data){
 		SendToFd(epollfd, user2sockfd, user2head,sizeof(struct HEAD_RETURN));
 		SendToFd(epollfd, user2sockfd, user2data_head, sizeof(struct server_to_client_send_to_user_head));
 		SendToFd(epollfd, user2sockfd, senddata, senddata_head.len);
-		struct HEAD_RETURN* sendtouser1 = data_head_return(20,0,0);
-		SendToFd(epollfd, sockfd, sendtouser1, sizeof(struct HEAD_RETURN));
 
 	}else if(data->datamode==2){// 显示所有已登录用户信息
 		printf("[mode showlist]\n");

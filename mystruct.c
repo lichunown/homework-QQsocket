@@ -1,8 +1,10 @@
 #ifndef MYSTRUCT_C
 #define MYSTRUCT_C 0
 #include "mysocket.c"
-
+#include <assert.h>
 #define TOKENSIZE 32
+
+
 
 /*客户端向服务器发送的头*/
 struct HEAD_MAIN{
@@ -102,6 +104,33 @@ struct HEAD_USER_ALL* data_signup(char* username,char* password,char* nickname){
 	return data;
 }
 
+struct HEAD_DATA* data_HEAD_DATA(char* token, int mode,int len){
+	struct HEAD_DATA* data = (struct HEAD_DATA*)malloc(sizeof(struct HEAD_DATA));
+	bzero(data,sizeof(struct HEAD_DATA));
+	memcpy(data->token,token,TOKENSIZE);
+	data->datamode = mode;
+	data->datalen = len;
+	return data;
+}
+struct HEAD_DATA* data_logout(char* token){
+	return data_HEAD_DATA(token, 0, 0);
+}
+
+struct HEAD_DATA* data_showlist(char* token){
+	return data_HEAD_DATA(token, 2, 0);
+}
+
+struct HEAD_DATA* data_sendto(char* token){
+	return data_HEAD_DATA(token, 1, sizeof(struct client_to_server_send_to_user_head));
+}
+
+struct client_to_server_send_to_user_head* data_sendto_head(char* username,int len){
+	struct client_to_server_send_to_user_head* data = (struct client_to_server_send_to_user_head*)malloc(sizeof(struct client_to_server_send_to_user_head));
+	bzero(data,sizeof(struct client_to_server_send_to_user_head));
+	strcpy(data->username,username);
+	data->len = len;
+	return data;
+}
 struct HEAD_RETURN* data_head_return(char mode,char succ,unsigned int datalen){
 	struct HEAD_RETURN* data = (struct HEAD_RETURN*)malloc(sizeof(struct HEAD_RETURN));
 	bzero(data,sizeof(struct HEAD_RETURN));
@@ -110,6 +139,8 @@ struct HEAD_RETURN* data_head_return(char mode,char succ,unsigned int datalen){
 	data->datalen = datalen;
 	return data;
 }
+
+
 // struct HEAD_DATA_ALL* data_logout(char* token){
 // 	struct HEAD_DATA_ALL* data = (struct HEAD_DATA_ALL*)malloc(sizeof(HEAD_DATA_ALL));
 // 	bzero(data,sizeof(HEAD_DATA_ALL));

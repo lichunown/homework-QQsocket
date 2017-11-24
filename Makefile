@@ -15,7 +15,7 @@ test_htons:
 	gcc -Wall test_int_in_socket.c -o test_int_in_socket
 	gcc -Wall test_int_in_socket_server.c -o test_int_in_socket_server
 client:
-	gcc -Wall client.c -o client -static
+	gcc -Wall client.c -o client 
 server:
 	gcc -g -Wall server.c -o server $(glibdev) $(sqlite3dev) 
 clean:
@@ -26,6 +26,9 @@ test:
 	make test_sql 
 	make test_hash
 	make test_htons
+static:
+	gcc -Wall client.c -o client -static
+	gcc -g -Wall server.c -o server $(glibdev) $(sqlite3dev) -static
 all:
 	make 
 	make test

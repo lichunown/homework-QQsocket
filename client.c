@@ -38,6 +38,10 @@ char* USERNAME = NULL;
 char* NICKNAME = NULL;
 
 int main(int argv,char* args[]){
+	
+	assert(sizeof(int)==4);
+	assert(sizeof(long)==8);
+
 	TOKEN = (char*)malloc(TOKENSIZE);
 	USERNAME = (char*)malloc(16);
 	NICKNAME = (char*)malloc(16);
