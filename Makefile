@@ -1,6 +1,7 @@
-glibdev = -L /usr/local/lib -l glib-2.0
-sqlite3dev = -lsqlite3
-
+glibdev = `pkg-config --libs glib-2.0 ` # -L /usr/local/lib -l glib-2.0
+sqlite3dev = `pkg-config --libs sqlite3`
+glibstatic = `pkg-config --libs glib-2.0 --cflags --static`
+sqlite3static = `pkg-config --libs sqlite3 --cflags --static`
 default:
 	make clean
 	make client
@@ -27,8 +28,8 @@ test:
 	make test_hash
 	make test_htons
 static:
-	gcc -Wall client.c -o client -static
-	gcc -g -Wall server.c -o server $(glibdev) $(sqlite3dev) -static
+	gcc -Wall client.c -o client --static
+	gcc -g -Wall server.c -o server_static $(glibstatic) $(sqlite3static) --static
 all:
 	make 
 	make test
