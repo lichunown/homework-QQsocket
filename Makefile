@@ -1,4 +1,4 @@
-glibdev = `pkg-config --libs glib-2.0 ` # -L /usr/local/lib -l glib-2.0
+glibdev = `pkg-config --libs glib-2.0  --cflags --static` # -L /usr/local/lib -l glib-2.0
 sqlite3dev = `pkg-config --libs sqlite3`
 glibstatic = `pkg-config --libs glib-2.0 --cflags --static`
 sqlite3static = `pkg-config --libs sqlite3 --cflags --static`
