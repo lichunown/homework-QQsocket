@@ -11,6 +11,7 @@ author:lcy
 #include "mysocket.c"
 #include "mystruct.c"
 #include "encode.c"
+#include "client_recv.c"
 #include <stdlib.h>
 #include <signal.h>
 #include <assert.h>
@@ -26,21 +27,17 @@ void client_sendto(int sockfd,char* data);
 void client_test(int sockfd,char* data);
 void client_showlist(int sockfd,char* token);
 
-void mainReadLoop(int sockfd);
-void mainWriteLoop(int sockfd);
+void mainReadLoop(int sockfd,struct LOGDATA* logdata);
+void mainWriteLoop(int sockfd,struct LOGDATA* logdata);
 
 void checkcmd(int sockfd,char** splitdata);
 
 
 void checkresponse(int sockfd, struct HEAD_RETURN* receiveHead);
-void login_ok(struct server_login_return* data);
-
-int LOGINSTATUS = 0;
-char* TOKEN = NULL;
-char* USERNAME = NULL;
-char* NICKNAME = NULL;
+// void login_ok(struct server_login_return* data);
 
 struct LOGDATA{
+	char logstatus;
 	char username[16];
 	char token[TOKENSIZE];
 	char nickname[16]; 
@@ -75,16 +72,28 @@ int main(int argv,char* args[]){
 	int pid = fork();
 	if(pid ==0){//read
 		logdata = shmat(shmid, 0, 0);
-		mainReadLoop(sockfd);
+		logdata->logstatus = 0;
+		mainReadLoop(sockfd,logdata);
 	}else{//write
 		logdata = shmat(shmid, 0, 0);
-		mainWriteLoop(sockfd);		
+		mainWriteLoop(sockfd,logdata);		
 	}
 	shmctl(shmid,IPC_RMID,NULL);
 
 	return 0;
 }
 
+void mainReadLoop(int sockfd,struct LOGDATA* logdata){
+	int returnmode;
+	while(1){
+		returnmode = client_recv(sockfd,logdata->nickname,logdata->token);
+		if(returnmode==1){
+			logdata->logstatus = 1;
+		}else if(returnmode==-1){
+			logdata->logstatus = 0;
+		}
+	}
+}
 
 
 void checkcmd(int sockfd,char** splitdata){
@@ -107,22 +116,10 @@ void checkcmd(int sockfd,char** splitdata){
 	}else if(strcmp(splitdata[0],"#showlist")==0){
 		client_showlist(sockfd,splitdata[1]);
 	}else{
-		printf("please use cmds:\n\t\t`#login` `#signup` `#logout` `#exit` `#sendto`\n");
+		printf("[error]: cmd not found.\n");
 	}
 }
-void mainReadLoop(int sockfd){
-	struct HEAD_RETURN receiveHead;
-	int n;
-	while(1){
-		bzero(&receiveHead,sizeof(receiveHead));
-		n = Recv(sockfd,&receiveHead,sizeof(receiveHead),0);
-		if(n<=0){
-			printf("Server Error. \n");
-			exit(0);
-		}
-		checkresponse(sockfd,&receiveHead);
-	}
-}
+
 void checkresponse(int sockfd, struct HEAD_RETURN* receiveHead){
 	void* data = NULL;
 	unsigned int length;
@@ -167,19 +164,10 @@ void checkresponse(int sockfd, struct HEAD_RETURN* receiveHead){
 	}
 	if(data != NULL)free(data);
 }
-void login_ok(struct server_login_return* data){
-	printf("login successful\n");
-	// printf("log_ok function:\n");
-	// print16((char*)data,sizeof(struct server_login_return));
-	// printf("\n");sta
-	LOGINSTATUS = 1;
-	memcpy(TOKEN,data->token,TOKENSIZE);
-	strcpy(NICKNAME,data->nickname);
-	printf("\t nickname: `%s`\n",data->nickname);
-	printf("\t    token: `%s`\n",data->token);
-}
 
-void mainWriteLoop(int sockfd){
+
+
+void mainWriteLoop(int sockfd,struct LOGDATA* logdata){
 	char input[1024];
 	puts("");
 	while(1){

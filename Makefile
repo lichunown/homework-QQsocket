@@ -17,6 +17,8 @@ test_htons:
 	gcc -Wall test_int_in_socket_server.c -o test_int_in_socket_server
 client:
 	gcc -Wall client.c -o client 
+client2:
+	gcc -Wall client2.c -o client2
 server:
 	gcc -g -Wall server.c -o server $(glibdev) $(sqlite3dev) 
 clean:
