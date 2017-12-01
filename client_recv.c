@@ -85,8 +85,7 @@ int client_recv(int sockfd,char** nickname,char** token){
 			}
 			break;
 		case 22://showlist
-			int num = head_return->datalen/sizeof(list_per_user);
-			for(int i=0;i<num;i++){
+			for(int i=0;i < (head_return->datalen)/sizeof(list_per_user);i++){
 				client_recv_and_out_perlist(sockfd);
 			}
 			break;

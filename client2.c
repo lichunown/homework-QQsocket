@@ -15,7 +15,6 @@ author:lcy
 #include <stdlib.h>
 #include <signal.h>
 #include <assert.h>
-
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #define DEBUG true
@@ -33,16 +32,14 @@ void mainWriteLoop(int sockfd,struct LOGDATA* logdata);
 void checkcmd(int sockfd,char** splitdata);
 
 
-void checkresponse(int sockfd, struct HEAD_RETURN* receiveHead);
-// void login_ok(struct server_login_return* data);
-
 struct LOGDATA{
 	char logstatus;
 	char username[16];
 	char token[TOKENSIZE];
 	char nickname[16]; 
 };
-struct LOGDATA* logdata;
+
+struct LOGDATA* mlogdata;
 int shmid;
 
 void bekilled(int n){
@@ -71,12 +68,12 @@ int main(int argv,char* args[]){
 	}
 	int pid = fork();
 	if(pid ==0){//read
-		logdata = shmat(shmid, 0, 0);
-		logdata->logstatus = 0;
-		mainReadLoop(sockfd,logdata);
+		mlogdata = shmat(shmid, 0, 0);
+		mlogdata->logstatus = 0;
+		mainReadLoop(sockfd,mlogdata);
 	}else{//write
-		logdata = shmat(shmid, 0, 0);
-		mainWriteLoop(sockfd,logdata);		
+		mlogdata = shmat(shmid, 0, 0);
+		mainWriteLoop(sockfd,mlogdata);		
 	}
 	shmctl(shmid,IPC_RMID,NULL);
 
@@ -84,13 +81,15 @@ int main(int argv,char* args[]){
 }
 
 void mainReadLoop(int sockfd,struct LOGDATA* logdata){
-	int returnmode;
+	int returnmode=0;
 	while(1){
-		returnmode = client_recv(sockfd,logdata->nickname,logdata->token);
+		returnmode = client_recv(sockfd,&(logdata->nickname),&(logdata->token));
 		if(returnmode==1){
 			logdata->logstatus = 1;
 		}else if(returnmode==-1){
 			logdata->logstatus = 0;
+		}else{
+
 		}
 	}
 }
@@ -120,50 +119,50 @@ void checkcmd(int sockfd,char** splitdata){
 	}
 }
 
-void checkresponse(int sockfd, struct HEAD_RETURN* receiveHead){
-	void* data = NULL;
-	unsigned int length;
-	if(receiveHead->datalen != 0){
-		length = receiveHead->datalen;
-		data = malloc(length);
-		Recv(sockfd,data,length,0);
-		printf("recv str:`%s`\n",(char*)data);
-	}
-	if(receiveHead->succ==0){
-		printf("[message] cmd succ\n");
-	}else{
-		printf("[message] cmd fail\n");
-	}
-	if(receiveHead->mode == 11 && receiveHead->succ == 0){
-		assert(length == sizeof(server_login_return));
-		login_ok(data);
-	}else if(receiveHead->mode == 12 && receiveHead->succ == 0){
-		printf("Please login use the new username.");
-	}else if(receiveHead->mode == 13 && receiveHead->succ == 0){
-		printf("[warning]: logout\nBecause another client login in this username.\n");
-	}else if(receiveHead->mode == 22 && receiveHead->succ == 0){
-		printf("LOGIN User:   length=%d\n",length);
-		for(int i = 0;i<length/sizeof(struct list_per_user);i++){
-			struct list_per_user perdata;
-			Recv(sockfd,&perdata,sizeof(struct list_per_user),0);
-			printf("\t %s: %s\n",perdata.username,perdata.nickname);
-		}
-	}else if(receiveHead->mode == 99 && receiveHead->succ == 0){
-		/*other send to here*/
-		struct server_to_client_send_to_user_head* head_data = (struct server_to_client_send_to_user_head*)data;
-		printf("Recving data from %s:\n",head_data->username);
-		char* recvdata = (char*)malloc(head_data->len);
-		Recv(sockfd,recvdata,head_data->len,0);
-		printf("%s\n\n",recvdata);
-	}else if(receiveHead->mode == 20 && receiveHead->succ == 0){
-		/*other send to here*/
-		printf("send to other user succeed\n");
-	}
-	else {
-		//printf("Test???\n:`%s`\n",(char*)receiveHead);
-	}
-	if(data != NULL)free(data);
-}
+// void checkresponse(int sockfd, struct HEAD_RETURN* receiveHead){
+// 	void* data = NULL;
+// 	unsigned int length;
+// 	if(receiveHead->datalen != 0){
+// 		length = receiveHead->datalen;
+// 		data = malloc(length);
+// 		Recv(sockfd,data,length,0);
+// 		printf("recv str:`%s`\n",(char*)data);
+// 	}
+// 	if(receiveHead->succ==0){
+// 		printf("[message] cmd succ\n");
+// 	}else{
+// 		printf("[message] cmd fail\n");
+// 	}
+// 	if(receiveHead->mode == 11 && receiveHead->succ == 0){
+// 		assert(length == sizeof(server_login_return));
+// 		login_ok(data);
+// 	}else if(receiveHead->mode == 12 && receiveHead->succ == 0){
+// 		printf("Please login use the new username.");
+// 	}else if(receiveHead->mode == 13 && receiveHead->succ == 0){
+// 		printf("[warning]: logout\nBecause another client login in this username.\n");
+// 	}else if(receiveHead->mode == 22 && receiveHead->succ == 0){
+// 		printf("LOGIN User:   length=%d\n",length);
+// 		for(int i = 0;i<length/sizeof(struct list_per_user);i++){
+// 			struct list_per_user perdata;
+// 			Recv(sockfd,&perdata,sizeof(struct list_per_user),0);
+// 			printf("\t %s: %s\n",perdata.username,perdata.nickname);
+// 		}
+// 	}else if(receiveHead->mode == 99 && receiveHead->succ == 0){
+// 		/*other send to here*/
+// 		struct server_to_client_send_to_user_head* head_data = (struct server_to_client_send_to_user_head*)data;
+// 		printf("Recving data from %s:\n",head_data->username);
+// 		char* recvdata = (char*)malloc(head_data->len);
+// 		Recv(sockfd,recvdata,head_data->len,0);
+// 		printf("%s\n\n",recvdata);
+// 	}else if(receiveHead->mode == 20 && receiveHead->succ == 0){
+// 		/*other send to here*/
+// 		printf("send to other user succeed\n");
+// 	}
+// 	else {
+// 		//printf("Test???\n:`%s`\n",(char*)receiveHead);
+// 	}
+// 	if(data != NULL)free(data);
+// }
 
 
 
@@ -195,7 +194,6 @@ void client_login(int sockfd,char* data){// TODO
 	char** uandp = split(data);
 	char* username = uandp[0];
 	char* password = uandp[1];
-	strcpy(USERNAME,username);
 	printf("you input username:%s password:%s\n",username,password);
 	struct HEAD_USER_ALL* senddata = data_login(username,password);
 	Send(sockfd,senddata,sizeof(struct HEAD_USER_ALL),0);
