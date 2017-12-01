@@ -81,30 +81,7 @@ int main(int argv,char* args[]){
 		mainWriteLoop(sockfd);		
 	}
 	shmctl(shmid,IPC_RMID,NULL);
-	// assert(sizeof(int)==4);
-	// assert(sizeof(long)==8);
 
-	// TOKEN = (char*)malloc(TOKENSIZE);
-	// USERNAME = (char*)malloc(16);
-	// NICKNAME = (char*)malloc(16);
-
-
-	// if(argv != 3){
-	// 	printf("please input: `name [ip_address] [port]`\n");
-	// 	exit(1);
-	// }
-	// printf("you input  [IP]:%s  [PORT]:%s\n",args[1],args[2]);
-	// int port = atoi(args[2]);
-	// int sockfd = CreateClient(args[1],port);
-	// if(sockfd){
-	// 	printf("[message]: Connected %s:%s\n\n",args[1],args[2]);
-	// }
-	// int pid = fork();
-	// if(pid==0){// read
-	// 	mainReadLoop(sockfd);
-	// }else{// write
-	// 	mainWriteLoop(sockfd);		
-	// }
 	return 0;
 }
 
