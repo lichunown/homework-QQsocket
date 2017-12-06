@@ -19,11 +19,13 @@ client:
 	gcc -Wall client.c -o client 
 client2:
 	gcc -Wall client2.c -o client2
+client_epoll:
+	gcc -Wall client_epoll.c -o client_epoll
 server:
 	gcc -g -Wall server.c -o server $(glibdev) $(sqlite3dev) 
 clean:
 	rm -f *.out test_server test_mystring test_sql test_hash test_server_epoll
-	rm -f client server test_int_in_socket test_int_in_socket_server
+	rm -f client server test_int_in_socket test_int_in_socket_server client_epoll
 test:
 	make test_mystring 
 	make test_sql 

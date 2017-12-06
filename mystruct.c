@@ -131,6 +131,7 @@ struct client_to_server_send_to_user_head* data_sendto_head(char* username,int l
 	data->len = len;
 	return data;
 }
+
 struct HEAD_RETURN* data_head_return(char mode,char succ,unsigned int datalen){
 	struct HEAD_RETURN* data = (struct HEAD_RETURN*)malloc(sizeof(struct HEAD_RETURN));
 	bzero(data,sizeof(struct HEAD_RETURN));
