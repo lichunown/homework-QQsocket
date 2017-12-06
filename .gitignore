@@ -3,6 +3,7 @@ data.sqlite3
 ./client
 test_hash
 ./server
+client2
 client.out
 test_int_in_socket_server
 test_int_in_socket

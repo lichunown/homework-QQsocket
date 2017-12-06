@@ -6,6 +6,7 @@ default:
 	make clean
 	make client
 	make server
+	make client2
 test_mystring:
 	gcc -g -Wall test_mystring.c -o test_mystring
 test_sql:
@@ -18,14 +19,14 @@ test_htons:
 client:
 	gcc -Wall client.c -o client 
 client2:
-	gcc -Wall client2.c -o client2
+	gcc -Wall client2.c -o client2 -g
 client_epoll:
 	gcc -Wall client_epoll.c -o client_epoll
 server:
 	gcc -g -Wall server.c -o server $(glibdev) $(sqlite3dev) 
 clean:
 	rm -f *.out test_server test_mystring test_sql test_hash test_server_epoll
-	rm -f client server test_int_in_socket test_int_in_socket_server client_epoll
+	rm -f client server test_int_in_socket test_int_in_socket_server client_epoll client2
 test:
 	make test_mystring 
 	make test_sql 

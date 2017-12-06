@@ -28,7 +28,11 @@ char* PASSWORD;
 char* NICKNAME;
 char* TOKEN;
 int status;
+
 int epollfd;
+
+
+
 
 int main(int argv,char* args[]){ 
 	assert(sizeof(int)==4);
@@ -39,7 +43,7 @@ int main(int argv,char* args[]){
 	TOKEN = (char*)malloc(TOKENSIZE);
 	NICKNAME = (char*)malloc(16);
 	status = 0;
-
+	input_datas = NULL;
 	int port = 8001;
 	epollfd = epoll_create(MAX_EVENTS);  
 	struct epoll_event eventList[MAX_EVENTS];  
