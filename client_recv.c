@@ -14,8 +14,6 @@ struct list_per_user* client_recv_list_return(int sockfd);
 
 int client_recv(int sockfd, char** nickname,char** token);
 
-
-
 void message_out(char* data);
 void message_out_login_peruser(char* username,char* nickname);
 

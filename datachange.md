@@ -210,6 +210,76 @@ struct SEND_FILE{
 
 
 # 函数说明
+## 头
+- my.h
+
+```c
+#define DEBUG true//是否debug（目前这一定义没用。。）
+
+#define PERSTRLENGTH 200 //分割字符串的最大长度
+#define TOKENSIZE 32//token大小
+
+#define FILEPERLEN 1024//文件传输，分块大小
+#define SAVEFILEPATH "data"//服务器文件保存目录
+#define CLIENTDATAPATH "clientdata"//客户端文件保存目录
+
+#define MAX_EVENTS 100 // 服务器每次循环event上限
+#define DATABASENAME "data.sqlite3"//数据库服务器保存位置
+```
+## 其他
+
+- client_recv.c
+
+```c
+struct HEAD_RETURN* client_recv_HEAD_RETURN(int sockfd);
+struct server_login_return* client_recv_login_return(int sockfd);
+struct server_to_client_send_to_user_head* client_recv_data_return(int sockfd);
+struct list_per_user* client_recv_list_return(int sockfd);
+
+
+int client_recv(int sockfd, char** nickname,char** token);
+
+void message_out(char* data);
+void message_out_login_peruser(char* username,char* nickname);
+
+void client_recv_and_out_perlist(int sockfd);
+void client_recv_and_out_data(int sockfd);
+void message_out_recv_data(char* username,char* data,int len);
+```
+
+- mysocket.c
+
+```c
+  int Socket(int domain, int type, int protocol);
+  int Bind(int sockfd,struct sockaddr* addr,socklen_t size);
+  int Listen(int sockfd,int backlog);
+  int Accept(int sockfd,struct sockaddr* addr,socklen_t* size);
+  int Connect(int sockfd,struct sockaddr* addr,int size);
+
+  ssize_t Send(int sockfd, const void *buf, size_t len, int flags);
+  ssize_t Recv(int sockfd, void *buf, size_t len, int flags);
+
+  int CreateClient(char* serverip,int port);
+  int CreateServer(int port,int backlog);
+```
+
+- mystruct.c
+
+```c
+struct HEAD_USER_ALL* data_login(char* username,char* password);
+struct HEAD_USER_ALL* data_signup(char* username,char* password,char* nickname);
+
+struct HEAD_DATA* data_HEAD_DATA(char* token, int mode,int len);
+struct HEAD_DATA* data_logout(char* token);
+struct HEAD_DATA* data_showlist(char* token);
+struct HEAD_DATA* data_sendto(char* token);
+struct HEAD_DATA* data_showfile(char* token);
+struct HEAD_DATA* data_sendfile(char* token);
+
+struct HEAD_RETURN* data_head_return(char mode,char succ,unsigned int datalen);
+```
+
+
 
 - mystring.c
 
@@ -226,10 +296,28 @@ char* ltoa(long num);
 char* ptoa(void* num);
 ```
 **可以使用`make test_mysring`测试**
+
+- filetransport.c
+
+```c
+struct SEND_FILE* recv_sendfile_head(int sockfd);
+void mergeFiles(char* filename, unsigned int maxid, unsigned int perlength, unsigned long filelength);
+struct SEND_FILE* sendfile_head(char* filename, unsigned int id, unsigned int datalen, unsigned long filelength);
+void client_sendfile(int sockfd,char* token,char* path,char* filename);
+int trave_dir(char* path, struct file_list** data);
+void client_startrecv_id(int sockfd,char* token, char* filename,int id,long filelength);
+void client_recvfile(int sockfd,char* path,char* token);
+
+```
+
+
+
 - encode.c
 ```c
 char* createToken(int len); // 创建长度len-1的随机字符串（最后一位是'\0'）[需要手工free]
 void print16(char* data,int size);// 每个字节以16进制输出
+void printAscii(char* data,int size);
+char* encodePassword(char* password); // TODO
 ```
 
 - sql.c

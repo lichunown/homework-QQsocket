@@ -6,6 +6,8 @@
 
 char* createToken(int len); // 创建长度len-1的随机字符串（最后一位是'\0'）[需要手工free]
 void print16(char* data,int size);// 每个字节以16进制输出
+void printAscii(char* data,int size);
+char* encodePassword(char* password); // TODO
 
 char* createToken(int len){
 	srand(time(NULL));
