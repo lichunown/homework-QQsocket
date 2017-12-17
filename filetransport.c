@@ -15,7 +15,8 @@
 #include <fcntl.h>
 #include <dirent.h>
 #include "mystruct.c"
-#define FILEPERLEN 1024
+#include "my.h"
+
 
 struct SEND_FILE* recv_sendfile_head(int sockfd);
 void mergeFiles(char* filename, unsigned int maxid, unsigned int perlength, unsigned long filelength);

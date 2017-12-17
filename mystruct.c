@@ -2,7 +2,7 @@
 #define MYSTRUCT_C 0
 #include "mysocket.c"
 #include <assert.h>
-#define TOKENSIZE 32
+#include "my.h"
 
 
 

@@ -3,9 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <strings.h>
-
-
-#define PERSTRLENGTH 200 //分割字符串的最大长度
+#include "my.h"
 
 
 char** split(char* str); // 分割字符串为2段

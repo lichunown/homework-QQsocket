@@ -8,8 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "encode.c"
-
-#define DATABASENAME "data.sqlite3"
+#include "my.h"
 
 int Sqlite3_open(char* name,sqlite3** db);// open database
 sqlite3* createDatabase(sqlite3* db);// create new database

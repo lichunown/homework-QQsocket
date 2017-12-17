@@ -25,9 +25,8 @@ author:lcy
 #include "encode.c"
 #include "sql.c"
 #include "g_hash_extend.c"
+#include "my.h"
 
-#define SAVEFILEPATH "data"
-#define MAX_EVENTS 100
 
 void AcceptConn(int epollfd, int srvfd);  
 void RecvData(int epollfd, int fd);  
