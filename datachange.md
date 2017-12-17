@@ -1,3 +1,13 @@
+# 结构图
+
+## 客户端到服务器
+
+![clientToServer](others/clientToServer.png)
+
+## 服务器到客户端
+![clientToServer](others/serverToClient.png)
+
+
 ## 数据报头
 
 ### 客户端到服务器
