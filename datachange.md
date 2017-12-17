@@ -17,14 +17,14 @@
 | char mode | char token[44];char datamode;int datalen; |
 | 1         | 49                                       |
 
-| discript            | HEAD_MAIN mode | token   | HEAD_DATA datamode | int datalen |
-| ------------------- | -------------- | ------- | ------------------ | ----------- |
-| logout（登出）          | 0              | `token` | 0                  | 0           |
-| senddata（向某一用户发送消息） | 0              | `token` | 1                  | `len`       |
-| sendfile | 0              | `token` | 10                 | `len`       |
-| recvfile | 0              | `token` | 20                 | `len`       |
-| showfile    | 0              | `token` | 3                  | 0           |
-| showlist（显示在线用户）    | 0              | `token` | 2                  | 0           |
+| discript                | HEAD_MAIN mode | token   | HEAD_DATA datamode | int datalen |
+| ----------------------- | -------------- | ------- | ------------------ | ----------- |
+| logout（登出）              | 0              | `token` | 0                  | 0           |
+| senddata（向某一用户发送消息）     | 0              | `token` | 1                  | `len`       |
+| sendfile（客户端向服务器发送文件）   | 0              | `token` | 10                 | `len`       |
+| recvfile（客户端接收服务器存储的文件） | 0              | `token` | 20                 | `len`       |
+| showfile（服务器文件列表）       | 0              | `token` | 3                  | 0           |
+| showlist（显示在线用户）        | 0              | `token` | 2                  | 0           |
 
 #### 客户端到服务器附加数据
 
@@ -32,11 +32,37 @@
 
 `struct client_to_server_send_to_user_head`
 
+```c
+struct client_to_server_send_to_user_head{
+	char username[16];
+	int len;
+};
+```
+
 | discript       | 结构体属性    | 大小   |
 | -------------- | -------- | ---- |
 | direction user | username | 16   |
 | data len       | len      | int  |
 | data           | ???      | ???  |
+
+- sendfile（客户端向服务器发送文件）
+  `struct SEND_FILE`
+
+  ```c
+  struct SEND_FILE{
+  	char filename[32];
+  	unsigned int id;
+  	unsigned int perlength;
+  	unsigned long filelength;
+  };
+  ```
+
+| discript | 结构体属性      | 大小            |
+| -------- | ---------- | ------------- |
+| 文件名      | filename   | 32            |
+| 文件分块ID   | id         | unsigned int  |
+| 文件分块大小   | perlength  | unsigned int  |
+| 发送文件总大小  | filelength | unsigned long |
 
 ### 服务器到客户端
 
@@ -57,12 +83,12 @@ struct HEAD_RETURN{
 | another user login（登录的用户被其他人登录，自动下线） | 13   | 0 or 1 | 0       |
 | logout（登出）                           | 21   | 0 or 1 | 0       |
 | showlist（显示在线用户列表）                   | 22   | 0 or 1 | `len`   |
-| showfile                                  | 23   | 0 or 1 | `len`   |
-| senddata（自己的消息是否成功）                  | 20   | 0 or 1 | `len`   |
+| showfile（显示服务器文件列表）                  | 23   | 0 or 1 | `len`   |
+| senddata（自己的消息是否成功）                  | 20   | 0 or 1 | 0       |
 | receive data（其他人发送来的消息）              | 99   | 0      | `len`   |
-| recv sendfile                               | 35   | 0 or 1 | `len`   |
-| sendto user sendfile                  | 30   | 0 or 1 | `len`   |
-| token error                          | 50   | 1      | 0       |
+| recv sendfile(服务器接收到文件)              | 35   | 0 or 1 | `len`   |
+| sendto user sendfile（服务器向客户端发送文件）    | 30   | 0 or 1 | `len`   |
+| token error（用户登录异常）                  | 50   | 1      | 0       |
 
 **succ==0 successful; succ!=0 unsuccessful（0为成功）**
 
@@ -103,11 +129,88 @@ struct list_per_user{
 
 
 
+- showfile（显示服务器文件列表）
+
+```c
+struct list_per_file{
+	char filename[32];
+	unsigned long size;
+};
+```
+
+返回n个`list_per_file`结构体，根据`HEAD_RETURN`中`datalen`判断n的大小。
+
+**datalen = n\*sizeof(list_per_user)**
+
+| discript | 结构体属性    | 大小   |
+| -------- | -------- | ---- |
+| 文件名      | filename | 32   |
+| 文件大小     | size     | 8    |
+
+- receive data（其他人发送来的消息）
+
+```c
+struct server_to_client_send_to_user_head{
+	char username[16];
+	int len;
+};
+```
+| discript | 结构体属性    | 大小   |
+| -------- | -------- | ---- |
+| 发送者用户名   | username | 16   |
+| 数据长度     | len      | 4    |
+| 用户发送数据   | ???      | ???  |
+
+
+
+- recv sendfile(服务器接收到文件)
+
+```c
+struct SEND_FILE{
+	char filename[32];
+	unsigned int id;
+	unsigned int perlength;
+	unsigned long filelength;
+};
+```
+| discript | 结构体属性      | 大小   |
+| -------- | ---------- | ---- |
+| 文件名      | filename   | 32   |
+| 分块id     | id         | 4    |
+| 块数据大小    | perlength  | 4    |
+| 文件总大小    | filelength | 8    |
+| 文件块数据    | ???        | ???  |
+
+- sendto user sendfile（服务器向客户端发送文件）
+
+```c
+struct SEND_FILE{
+	char filename[32];
+	unsigned int id;
+	unsigned int perlength;
+	unsigned long filelength;
+};
+```
+| discript | 结构体属性      | 大小   |
+| -------- | ---------- | ---- |
+| 文件名      | filename   | 32   |
+| 分块id     | id         | 4    |
+| 块数据大小    | perlength  | 4    |
+| 文件总大小    | filelength | 8    |
+| 文件块数据    | ???        | ???  |
+
+**注：文件分块大小不能改变**
+
+
+
+
+
 
 
 
 
 # 函数说明
+
 - mystring.c
 
 ```c

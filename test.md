@@ -21,19 +21,37 @@ make # build
 # another shell
 ./client.out 0.0.0.0 8001 # 两个参数分别为连接的IP 和端口号
 ```
-- 测试客户端内：
+- 客户端内：
 
 ```
+--------通用模块----------
+#help //显示帮助
+#status //显示客户端目前状态（是否在线，如果在线的话显示用户名）
+#exit// 退出程序，正常登出
+
+
+---------用户管理模块----------
 #signup [username] [password] [nickname]//注册用户
-
 #login [username] [password] //登录用户
+#logout  //退出登录
 
-#logout [token] //退出登录
+#showlist //显示所有已登录用户
 
-#sendto [token] [sendto_username] [data] //向某一用户发送信息
-	// token: 登录时返回的token, 
+
+-------------信息交流模块----------------
+#sendto [sendto_username] [data] //向某一用户发送信息
 	// sendto_username: 要发送的目标用户名,
 	// data: 发送的数据
 	
-#showlist //显示所有已登录用户
+	
+-------------文件传输模块----------------
+#showfiles //显示服务器已存在的文件
+#sendfile [filename] [dstfilename]//向服务器发送文件
+	//filename： 要发送的文件名
+	//dstfilename： 服务器端保存的文件名
+#recvfile [filename] [id=0]// 从服务器下载文件
+	//filename 服务器的文件名
+	//id 断点续传的文件块，默认为0
+
 ```
+- 
