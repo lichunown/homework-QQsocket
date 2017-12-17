@@ -5,7 +5,7 @@
 ![clientToServer](others/clientToServer.png)
 
 ## 服务器到客户端
-![clientToServer](others/serverToClient.png)
+![ServerToClient](others/ServerToClient.png)
 
 
 ## 数据报头
