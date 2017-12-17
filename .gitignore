@@ -4,6 +4,8 @@ data.sqlite3
 test_hash
 ./server
 build/
+data/
+clientdata/
 test/
 client2
 client.out

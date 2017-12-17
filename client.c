@@ -12,13 +12,13 @@ author:lcy
 #include "mystruct.c"
 #include "encode.c"
 #include "client_recv.c"
+#include "filetransport.c"
 #include <stdlib.h>
 #include <signal.h>
 #include <assert.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
-#define DEBUG true
-
+#include "my.h"
 
 struct LOGDATA{
 	char logstatus;
@@ -53,6 +53,11 @@ void bekilled(int n){
 }
 
 int main(int argv,char* args[]){
+    if(access(CLIENTDATAPATH,0)==-1){
+        if (mkdir(CLIENTDATAPATH,0777)){//如果不存在就用mkdir函数来创建  
+            printf("creat file bag failed!!!\n");  
+        }  	
+    }	
 	char* initip = "0.0.0.0";
 	int port = 8001;
 	if(argv==2){
@@ -147,6 +152,17 @@ void mainInputLoop(int sockfd,struct LOGDATA* logdata){
 			}else{
 				printf("please login first.\n");
 			}
+		}else if(strcmp(result[0],"#showfiles")==0){
+			if(logdata->logstatus==1){
+				struct HEAD_MAIN head_main;
+				head_main.mode = 1;
+				Send(sockfd,&head_main,sizeof(head_main),0);
+				struct HEAD_DATA* data = data_showfile(logdata->token);
+				Send(sockfd,data,sizeof(struct HEAD_DATA),0);
+				free(data);
+			}else{
+				printf("please login first.\n");
+			}
 		}else if(strcmp(result[0],"#logout")==0){
 			if(logdata->logstatus==1){
 				struct HEAD_MAIN head_main;
@@ -188,6 +204,30 @@ void mainInputLoop(int sockfd,struct LOGDATA* logdata){
 			}else{
 				printf("[status]: not login.\n");
 			}
+		}else if(strcmp(result[0],"#sendfile")==0){
+			if(logdata->logstatus==1){
+				char** n = split(result[1]);
+				printf("sendfile [%s] ---> %s\n",n[0],n[1]);				
+				if(access(n[0],0)==-1){
+					printf("[error]: \t%s not exist.\n",n[0]);
+					continue;
+				}
+				client_sendfile(sockfd,logdata->token,n[0],n[1]);
+				free_splitdata(n);
+			}else{
+				printf("[status]: not login.\n");
+			}
+		}else if(strcmp(result[0],"#recvfile")==0){
+			if(logdata->logstatus==1){
+				int recvid = 0;
+				char** n = split(result[1]);
+				recvid = atoi(n[1]);
+				printf("recvfile [%s] <--- [%s]  %d\n",n[0],n[0],recvid);				
+				client_startrecv_id(sockfd,logdata->token,n[0],recvid,0);
+				free_splitdata(n);
+			}else{
+				printf("[status]: not login.\n");
+			}
 		}else if(strcmp(result[0],"#help")==0){
 			printf("please use cmd follows:\n");
 			printf("\t `#login [username] [password]`\n");
@@ -196,11 +236,15 @@ void mainInputLoop(int sockfd,struct LOGDATA* logdata){
 			printf("\t `#showlist`\n");
 			printf("\t `#logout`\n");
 			printf("\t `#sendto [username] [data]`\n");
-			printf("\n  others:\n");
+			printf("\n\n  files:\n");
+			printf("\t `#showfiles`\n");
+			printf("\t `#sendfile [filename] [dstfilename]`\n");
+			printf("\t `#recvfile [filename] [id=0]`\n");
+			printf("\n\n  others:\n");
 			printf("\t `#status`\n");
 			printf("\t `#exit`\n");
 		}else{
-			printf("\n");
+			printf("use `#help` to show commands.\n");
 		}
 		free_splitdata(result);
 		free(input);

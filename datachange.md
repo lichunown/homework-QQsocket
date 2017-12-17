@@ -21,6 +21,9 @@
 | ------------------- | -------------- | ------- | ------------------ | ----------- |
 | logout（登出）          | 0              | `token` | 0                  | 0           |
 | senddata（向某一用户发送消息） | 0              | `token` | 1                  | `len`       |
+| sendfile | 0              | `token` | 10                 | `len`       |
+| recvfile | 0              | `token` | 20                 | `len`       |
+| showfile    | 0              | `token` | 3                  | 0           |
 | showlist（显示在线用户）    | 0              | `token` | 2                  | 0           |
 
 #### 客户端到服务器附加数据
@@ -54,8 +57,11 @@ struct HEAD_RETURN{
 | another user login（登录的用户被其他人登录，自动下线） | 13   | 0 or 1 | 0       |
 | logout（登出）                           | 21   | 0 or 1 | 0       |
 | showlist（显示在线用户列表）                   | 22   | 0 or 1 | `len`   |
+| showfile                                  | 23   | 0 or 1 | `len`   |
 | senddata（自己的消息是否成功）                  | 20   | 0 or 1 | `len`   |
 | receive data（其他人发送来的消息）              | 99   | 0      | `len`   |
+| recv sendfile                               | 35   | 0 or 1 | `len`   |
+| sendto user sendfile                  | 30   | 0 or 1 | `len`   |
 | token error                          | 50   | 1      | 0       |
 
 **succ==0 successful; succ!=0 unsuccessful（0为成功）**

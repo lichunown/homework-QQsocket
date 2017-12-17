@@ -41,6 +41,14 @@ struct HEAD_RETURN{
 	char succ;//是否成功
 	unsigned int datalen;
 }HEAD_RETURN;
+
+struct SEND_FILE{
+	char filename[32];
+	unsigned int id;
+	unsigned int perlength;
+	unsigned long filelength;
+};
+
 /****************************/
 
 
@@ -49,6 +57,9 @@ struct SEND_DATA{// epoll发送数据，是个链表
 	void* data;
 	struct SEND_DATA* next;
 };
+
+
+
 
 struct server_login_return{// 登陆成功后附加数据
     char nickname[16];
@@ -69,6 +80,19 @@ struct list_per_user{
 	char username[16];
 	char nickname[16];
 }list_per_user;
+
+/////////
+struct file_list{
+	char name[32];
+	int i;
+	unsigned long size;
+	struct file_list* next;
+};
+
+struct list_per_file{
+	char filename[32];
+	unsigned long size;
+};
 // struct HEAD_SEND_BY_FIFO{
 // 	size_t len;
 // }HEAD_SEND_BY_FIFO;
@@ -122,6 +146,16 @@ struct HEAD_DATA* data_showlist(char* token){
 
 struct HEAD_DATA* data_sendto(char* token){
 	return data_HEAD_DATA(token, 1, sizeof(struct client_to_server_send_to_user_head));
+}
+
+struct HEAD_DATA* data_showfile(char* token){
+	return data_HEAD_DATA(token, 3, 0);
+}
+struct HEAD_DATA* data_recvfile(char* token){
+	return data_HEAD_DATA(token, 20, sizeof(struct SEND_FILE));
+}
+struct HEAD_DATA* data_sendfile(char* token){
+	return data_HEAD_DATA(token, 10, sizeof(struct SEND_FILE));
 }
 
 struct client_to_server_send_to_user_head* data_sendto_head(char* username,int len){

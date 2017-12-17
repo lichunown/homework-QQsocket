@@ -3,19 +3,31 @@ author:lcy
 服务器。采用epoll多路复用。单进程模式。
 
 ***********************************************/
-#include "mysocket.c"
-#include "mystruct.c"
-#include "mystring.c"
-#include "sql.c"
-#include "encode.c"
-#include <sys/select.h>
+
+
+#include <stdlib.h>
+#include <string.h>
 #include <poll.h>  
 #include <sys/epoll.h>  
-#include <glib.h>
 #include <stdlib.h>
+#include <sys/select.h>
+#include <stdio.h>
+
+#include <signal.h>
+#include <assert.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+
+#include "mysocket.c"
+#include "filetransport.c"
+#include "mystruct.c"
+#include "mystring.c"
+#include "encode.c"
+#include "sql.c"
 #include "g_hash_extend.c"
-//最多处理的connect  
-#define MAX_EVENTS 100  
+
+#define SAVEFILEPATH "data"
+#define MAX_EVENTS 100
 
 void AcceptConn(int epollfd, int srvfd);  
 void RecvData(int epollfd, int fd);  
@@ -53,7 +65,11 @@ int main(int argv,char* args[]){
 	assert(sizeof(long)==8);
 	  
 	db = databaseInit();
-    
+    if(access(SAVEFILEPATH,0)==-1){
+        if (mkdir(SAVEFILEPATH,0777)){//如果不存在就用mkdir函数来创建  
+            printf("creat file bag failed!!!\n");  
+        }  	
+    }
 	User2Sock = g_hash_table_new_full(g_str_hash, g_str_equal,g_free,g_free);
 	Token2User = g_hash_table_new_full(g_str_hash, g_str_equal,g_free,g_free);
 	User2Nick = g_hash_table_new_full(g_str_hash, g_str_equal,g_free,g_free);
@@ -78,8 +94,8 @@ int main(int argv,char* args[]){
         printf("epoll add fail : fd = %d\n", sockListen);  
         exit(1);
     }  
+    printf("\nstart epoll....\n");
     for(;;){                 
-        printf("\n\nstart epoll....\n");
         int ret = epoll_wait(epollfd, eventList, MAX_EVENTS, timeout);  
         if(ret < 0){  
             printf("epoll error\n");  
@@ -272,6 +288,102 @@ void dataDataProcess(int epollfd,int sockfd, struct HEAD_DATA* data){
 		struct HEAD_RETURN* returndata = data_head_return(22,0,loginusernum*sizeof(list_per_user));
 		SendToFd(epollfd, sockfd, returndata, sizeof(struct HEAD_RETURN));
 		g_hash_table_foreach(User2Nick, (GHFunc)iteratorUser2Nick, &sockfd);
+	}else if(data->datamode==3){// show file
+		struct file_list* files;
+		int n = trave_dir(SAVEFILEPATH, &files);
+		struct HEAD_RETURN* headdata = data_head_return(23,0,n*sizeof(struct list_per_file));
+		SendToFd(epollfd, sockfd, headdata, sizeof(struct HEAD_RETURN));
+		for(int i=0; i<n; i++){
+			struct list_per_file* data = malloc(sizeof(struct list_per_file));
+			strcpy(data->filename,files->name);
+			data->size = files->size;
+			struct file_list* temp = files;
+			files = files->next;
+			free(temp);
+			SendToFd(epollfd, sockfd, data, sizeof(struct list_per_file));
+		}
+		printf("[sockfd %d] showfile -----  files num: %d\n",sockfd,n);
+	}else if(data->datamode==20){// client recv file
+		struct SEND_FILE* filehead = recv_sendfile_head(sockfd);
+		printf("[sockfd %d]: <sendfile to> %s:%d\n",sockfd,filehead->filename,filehead->id);
+		char filepath[255];
+		sprintf(filepath,"%s/%s",SAVEFILEPATH,filehead->filename);
+		if(access(filepath,0)==-1){
+			printf("[sockfd %d]: <sendfile to> file: %s nor exist.[ERROR]\n",sockfd,filehead->filename);
+			struct HEAD_RETURN* returndata = data_head_return(35,1,sizeof(struct SEND_FILE));
+			SendToFd(epollfd, sockfd, returndata, sizeof(struct HEAD_RETURN));
+			SendToFd(epollfd, sockfd, filehead, sizeof(struct SEND_FILE));
+			return;
+		}
+		FILE* f = fopen(filepath,"r");
+		if(f<0){
+			printf("[send file]: file %s open error\n",filepath);
+			struct HEAD_RETURN* returndata = data_head_return(35,1,sizeof(struct SEND_FILE));
+			SendToFd(epollfd, sockfd, returndata, sizeof(struct HEAD_RETURN));
+			SendToFd(epollfd, sockfd, filehead, sizeof(struct SEND_FILE));
+			return;			
+		}
+		if(fseek(f,filehead->perlength*filehead->id,SEEK_SET)==0){
+			void* data = malloc(filehead->perlength);
+			fread(data,sizeof(char),filehead->perlength,f);
+			if(filehead->filelength==0){
+				fseek(f,0,SEEK_END);
+				int nFileLen = ftell(f);
+				if(nFileLen<0){
+					struct HEAD_RETURN* returndata = data_head_return(35,5,sizeof(struct SEND_FILE));
+					SendToFd(epollfd, sockfd, returndata, sizeof(struct HEAD_RETURN));
+					SendToFd(epollfd, sockfd, filehead, sizeof(struct SEND_FILE));
+					free(data);				
+					return;
+				}	
+				printf("file size:  %d/%d\n",filehead->perlength,nFileLen);
+				filehead->filelength = nFileLen;							
+			}
+			struct HEAD_RETURN* returndata = data_head_return(35,0,sizeof(struct SEND_FILE));
+			SendToFd(epollfd, sockfd, returndata, sizeof(struct HEAD_RETURN));
+			SendToFd(epollfd, sockfd, filehead, sizeof(struct SEND_FILE));
+			SendToFd(epollfd, sockfd, data, filehead->perlength);			
+		}else{
+			struct HEAD_RETURN* returndata = data_head_return(35,2,sizeof(struct SEND_FILE));
+			SendToFd(epollfd, sockfd, returndata, sizeof(struct HEAD_RETURN));
+			SendToFd(epollfd, sockfd, filehead, sizeof(struct SEND_FILE));	
+		}	
+		fclose(f);
+
+	}else if(data->datamode==10){// client send file
+		struct SEND_FILE* filehead = recv_sendfile_head(sockfd);
+		char* perpath = malloc(255);
+		sprintf(perpath,"%s/%s_%d",SAVEFILEPATH,filehead->filename,filehead->id);
+		int f = open(perpath, O_WRONLY|O_CREAT,S_IRWXU);
+
+		if(f < 0){
+			printf("[sockfd %d]: <sendfile> <name:%s> <id:%d>\t\t[ERROR]\n",sockfd,filehead->filename,filehead->id);
+			printf("create file %s error.\n",perpath);
+			char* data = malloc(filehead->perlength);
+			Recv(sockfd,data,filehead->perlength,0);
+			struct HEAD_RETURN* returndata = data_head_return(30,1,sizeof(struct SEND_FILE));
+			SendToFd(epollfd, sockfd, returndata, sizeof(struct HEAD_RETURN));
+			SendToFd(epollfd, sockfd, filehead, sizeof(struct SEND_FILE));
+			free(data);
+			free(perpath);
+			return;
+		}
+		char* data = malloc(filehead->perlength);
+		Recv(sockfd,data,filehead->perlength,0);
+		write(f, data, filehead->perlength);
+		close(f);
+		free(data);
+		struct HEAD_RETURN* returndata = data_head_return(30,0,sizeof(struct SEND_FILE));
+		SendToFd(epollfd, sockfd, returndata, sizeof(struct HEAD_RETURN));
+		SendToFd(epollfd, sockfd, filehead, sizeof(struct SEND_FILE));		
+		printf("[sockfd %d]: <sendfile> <name:%s> <id:%d>\t\t[OK]\n",sockfd,filehead->filename,filehead->id);
+		if((filehead->id+1)*filehead->perlength > filehead->filelength){
+			sprintf(perpath,"%s/%s",SAVEFILEPATH,filehead->filename);
+			mergeFiles(perpath, filehead->id, filehead->perlength, filehead->filelength);	
+		}		
+		free(perpath);
+	}else if(data->datamode==20){// client recv file
+		
 	}else{
 
 	}

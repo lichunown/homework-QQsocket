@@ -82,6 +82,7 @@ ssize_t Send(int sockfd, const void *buf, size_t len, int flags){
 	ssize_t n = send(sockfd,buf,len,flags);
 	if(n!=len)printf("send not finish.\t %ld/%ld\n",n,len);
 	// print16((char*)buf,n);
+	// sleep(1);
 	return n;
 }
 

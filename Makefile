@@ -28,7 +28,7 @@ server:
 clean:
 	rm -f *.out test_server test_mystring test_sql test_hash test_server_epoll
 	rm -f client server test_int_in_socket test_int_in_socket_server client_epoll client2
-	rm -f build/*
+	rm -rf build/*
 test:
 	make test_mystring 
 	make test_sql 

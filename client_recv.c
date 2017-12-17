@@ -1,7 +1,10 @@
+#ifndef CLIENT_RECV_C
+#define CLIENT_RECV_C 0
+
 #include "mystruct.c"
 #include "mysocket.c"
-#include <stdlib.h>
-#include <string.h>
+#include "filetransport.c"
+#include "my.h"
 
 struct HEAD_RETURN* client_recv_HEAD_RETURN(int sockfd);
 struct server_login_return* client_recv_login_return(int sockfd);
@@ -50,9 +53,16 @@ void client_recv_and_out_perlist(int sockfd){
 	message_out_login_peruser(data->username,data->nickname);
 	free(data);
 }
+void client_recv_and_out_perfile(int sockfd){
+	struct list_per_file* data = malloc(sizeof(struct list_per_file));
+	Recv(sockfd,data,sizeof(struct list_per_file),0);
+	printf("\t%s\t\t\t\t\t%ld\n",data->filename,data->size);
+	free(data);
+}
 int client_recv(int sockfd,char** nickname,char** token){
 	struct HEAD_RETURN* head_return = client_recv_HEAD_RETURN(sockfd);
 	int returnmode = 0;
+	struct SEND_FILE* filehead;
 	switch(head_return->mode){
 		case 11://login
 			if(head_return->succ==0){
@@ -89,6 +99,12 @@ int client_recv(int sockfd,char** nickname,char** token){
 				client_recv_and_out_perlist(sockfd);
 			}
 			break;
+		case 23:
+			printf("server file list:\n");
+			for(int i=0;i < (head_return->datalen)/sizeof(struct list_per_file);i++){
+				client_recv_and_out_perfile(sockfd);
+			}			
+			break;
 		case 20://send succ
 			if(head_return->succ==0){
 				message_out("[msg]:   send successfull.");
@@ -102,7 +118,24 @@ int client_recv(int sockfd,char** nickname,char** token){
 		case 50://token error
 			message_out("[error]: token error.\n\ttry login again.");
 			returnmode = -1;
-			break;					
+			break;	
+		case 35:
+			if(head_return->succ==0){
+				client_recvfile(sockfd,CLIENTDATAPATH,*token);
+			}else{
+				printf("[recv file]: error: %d\n",head_return->succ);
+			}
+			break;
+		case 30:
+			filehead = malloc(sizeof(struct SEND_FILE));
+			Recv(sockfd, filehead,sizeof(struct SEND_FILE),0);
+			if(head_return->succ==0){
+				printf("[sendfile]: ---  >  filename:%s    (id:%d)\t\t[OK]\n",filehead->filename,filehead->id);
+			}else{
+				printf("[sendfile]: ---  >  filename:%s    (id:%d)\t\t[ERROR]\n",filehead->filename,filehead->id);
+			}
+			free(filehead);
+			break;				
 		default:
 			break;
 	}
@@ -131,3 +164,5 @@ void message_out_login_peruser(char* username,char* nickname){
 	sprintf(data,"username: %s    nickname: %s",username,nickname);
 	message_out(data);
 }
+
+#endif

@@ -1,7 +1,9 @@
 #ifndef G_HASH_EXTEND_C
 #define G_HASH_EXTEND_C 0
 
+#include <glib.h>
 #include <stdio.h>
+
 struct find_key_by_value_s{
 	char* value;
 	char* result;
