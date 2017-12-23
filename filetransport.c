@@ -23,6 +23,8 @@ void mergeFiles(char* filename, unsigned int maxid, unsigned int perlength, unsi
 struct SEND_FILE* sendfile_head(char* filename, unsigned int id, unsigned int datalen, unsigned long filelength);
 void client_sendfile(int sockfd,char* token,char* path,char* filename);
 int trave_dir(char* path, struct file_list** data);
+void client_startrecv_id(int sockfd,char* token, char* filename,int id,long filelength);
+void client_recvfile(int sockfd,char* path,char* token);
 
 
 struct SEND_FILE* recv_sendfile_head(int sockfd){

@@ -14,6 +14,20 @@
 #include <string.h>
 
 #include "encode.c"
+
+int Socket(int domain, int type, int protocol);
+int Bind(int sockfd,struct sockaddr* addr,socklen_t size);
+int Listen(int sockfd,int backlog);
+int Accept(int sockfd,struct sockaddr* addr,socklen_t* size);
+int Connect(int sockfd,struct sockaddr* addr,int size);
+
+ssize_t Send(int sockfd, const void *buf, size_t len, int flags);
+ssize_t Recv(int sockfd, void *buf, size_t len, int flags);
+
+int CreateClient(char* serverip,int port);
+int CreateServer(int port,int backlog);
+
+
 int Socket(int domain, int type, int protocol){
 	int sockfd = socket(domain,type,protocol);
 	if(sockfd==-1){

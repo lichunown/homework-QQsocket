@@ -106,6 +106,18 @@ struct list_per_file{
 // 	void* data;
 // }SERVERSENDSTRUCT;
 
+struct HEAD_USER_ALL* data_login(char* username,char* password);
+struct HEAD_USER_ALL* data_signup(char* username,char* password,char* nickname);
+
+struct HEAD_DATA* data_HEAD_DATA(char* token, int mode,int len);
+struct HEAD_DATA* data_logout(char* token);
+struct HEAD_DATA* data_showlist(char* token);
+struct HEAD_DATA* data_sendto(char* token);
+struct HEAD_DATA* data_showfile(char* token);
+struct HEAD_DATA* data_sendfile(char* token);
+
+struct HEAD_RETURN* data_head_return(char mode,char succ,unsigned int datalen);
+
 
 
 struct HEAD_USER_ALL* data_login(char* username,char* password){
