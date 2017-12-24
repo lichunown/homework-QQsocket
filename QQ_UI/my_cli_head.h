@@ -23,6 +23,10 @@ enum
 #include <errno.h>
 #include <gtk/gtk.h>
 #include <sqlite3.h>
+#include "../mystruct.c"
+#include "../mysocket.c"
+#include "../client_recv.c"
+int lock = 0;
 int sockfd;          /*用来存放客户端的通信端口号*/
 typedef struct message
 {
@@ -46,9 +50,13 @@ GtkTreeStore *treestore;
 GtkTreeIter toplevel, child;           //迭代器
 GtkTreeModel *model;
 pthread_t id;
+GtkTextBuffer *buffer_c;
+char sendbuf[1024],getbuf[1024];
+char sendbuf_g[1024],getbuf_g[1024];//发送接受消息窗口
 /*保存登录信息*/
-const gchar * log_username;
-const gchar * log_password;
+gchar * log_username;
+gchar * log_password;
+gchar * log_token;
 /*保存注册信息*/
 const gchar *username;
 const gchar *password1;
@@ -77,6 +85,10 @@ void cant_add();
 void no_rig_cant_add();
 void delete_success();
 void change_label(char * buf_t);
+void get_sock();
+void send_sock();
+void dailog_log_win(char * buf_d);
+char * time_now();
 #endif
 
 

@@ -8,11 +8,11 @@ GtkWidget *dailog_win;    /*错误提示窗口*/
 
 
 GtkWidget *message_entry;
-GtkTextBuffer *buffer_c;
-char sendbuf[1024],getbuf[1024];
+
+
 GtkWidget *message_entry_g;
 GtkTextBuffer *buffer_g;
-char sendbuf_g[1024],getbuf_g[1024];
+
 int count = 0;
 
 
@@ -62,10 +62,64 @@ char * time_now()
 返    回:        无
 ********************************************************************/
 /*接收单聊消息*/
-void get_message(void)
+/*void get_message(void)
 {
-  
-}
+   while(1){
+    ///if(lock==1) sleep(1);
+    char * now_time = time_now();
+    GtkTextIter iter;
+    //gdk_threads_enter();
+    struct HEAD_RETURN* head_return = client_recv_HEAD_RETURN(sockfd);
+    //gdk_threads_leave();
+    int returnmode = 0;
+    int datalen;
+    int i;
+    void* data;
+    struct list_per_user* list_per_userdata;
+    struct server_to_client_send_to_user_head* headdata;
+	switch(head_return->mode){
+		case 13://another user login
+			message_out("[error]: another user login.");
+			returnmode = -1;
+			break;
+		case 20://send succ
+			if(head_return->succ==0){
+				message_out("[msg]:   send successfull.");
+			}else{
+				message_out("[warning]: send error.");
+			}
+            break;
+		case 22://showlist
+			for(i=0;i < (head_return->datalen)/sizeof(list_per_user);i++){
+                list_per_userdata = client_recv_list_return(sockfd);
+                gtk_tree_store_append(treestore, &child, &toplevel);
+                gtk_tree_store_set(treestore, &child,COLUMN,list_per_userdata->username, -1);
+                free(list_per_userdata);
+			}
+			break;            
+		case 99://recv data
+            headdata = client_recv_data_return(sockfd);
+            datalen = headdata->len;
+            data = malloc(datalen);
+            Recv(sockfd,data,datalen,0);
+
+            memset(&getbuf,0,sizeof(getbuf));
+            sprintf(getbuf,"%s %s:%s\n",now_time,headdata->username,data);
+
+           
+            gtk_text_buffer_get_end_iter(buffer_c,&iter);
+            gtk_text_buffer_insert(buffer_c,&iter,sendbuf,-1);
+
+
+            free(headdata);
+            free(data);
+			break;							
+		default:
+			break;
+        }
+    }
+
+}*/
 
 
 
@@ -90,6 +144,22 @@ void on_send ()
     const char *message;GtkTextIter iter;
     char * now_time = time_now();
     message=gtk_entry_get_text(GTK_ENTRY(message_entry));
+
+
+    struct HEAD_MAIN head_main;
+    head_main.mode = 1;
+    Send(sockfd,&head_main,sizeof(head_main),0);
+    gdk_threads_enter();
+    struct HEAD_DATA* data_head = data_sendto(log_token);
+    gdk_threads_leave();
+    Send(sockfd,data_head,sizeof(struct HEAD_DATA),0);
+    free(data_head);
+    printf("sending to `%s`\n",name);
+    struct client_to_server_send_to_user_head* send_head = data_sendto_head(name,strlen(message)+1);
+    Send(sockfd,send_head,sizeof(struct client_to_server_send_to_user_head),0);
+    Send(sockfd,message,strlen(message)+1,0);
+    free(send_head);
+
 
     memset(&sendbuf,0,sizeof(sendbuf));
     sprintf(sendbuf,"%s 我:%s\n",now_time,message);
@@ -242,9 +312,12 @@ void send_message_win(gchar * name)
     gtk_box_pack_start(GTK_BOX(vbox),hbox,FALSE,FALSE,5);
     button1=gtk_button_new_with_label("删除好友");
     gtk_box_pack_start(GTK_BOX(hbox),button1,FALSE,FALSE,5);
-
+    
     g_signal_connect(G_OBJECT(button),"clicked",G_CALLBACK(on_send),name);
     g_signal_connect(G_OBJECT(button1),"clicked",G_CALLBACK(delete_friends),NULL);
-
+    
     gtk_widget_show_all(window_c);
+    /*------ 多线程操作接受消息------------------------*/
+    
+  //  fork();
 }

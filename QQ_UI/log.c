@@ -91,6 +91,25 @@ called by       rig_user
 ********************************************************************/
 void resrve_user_name()
 {
+    username = gtk_entry_get_text(GTK_ENTRY(user));
+    password1 = gtk_entry_get_text(GTK_ENTRY(passwd1));
+    password2 = gtk_entry_get_text(GTK_ENTRY(passwd2));
+    if(strcmp(password1,password2)==0){
+        struct HEAD_USER_ALL* data = data_signup(username,password1,"nothing");
+        Send(sockfd, data, sizeof( struct HEAD_USER_ALL),0);
+        free(data);
+      // printf("%d  %d\n",head_return->mode,head_return->succ);
+       /* if(head_return->mode == 12 && head_return->succ == 0){//login success
+            dailog_log_win("注册成功");
+        }else{
+            dailog_log_win("注册错误");
+        }
+        free(head_return);*/
+    }
+    else{
+
+        dailog_rig_win("注册密码错误");
+    }
     
 }
 
@@ -279,11 +298,27 @@ void dailog_log_win(char * buf_d)
 /*登录用户验证用户名和密码*/
 void log_user()
 {
-   
-     
-    /*-------------test-----测试程序：直接进入主界面-------------------*/
+    log_username = gtk_entry_get_text(GTK_ENTRY(user));
+    log_password = gtk_entry_get_text(GTK_ENTRY(passwd));
+    struct HEAD_USER_ALL* data = data_login(log_username,log_password);
+    Send(sockfd, data, sizeof(struct HEAD_USER_ALL),0);
+   /* struct HEAD_RETURN* head_return = client_recv_HEAD_RETURN(sockfd);
+    printf("%d  %d\n",head_return->mode,head_return->succ);
+    if(head_return->mode == 11 && head_return->succ == 0){//login success
+        gdk_threads_enter();
+        struct server_login_return* logdata = client_recv_login_return(sockfd);
+        gdk_threads_leave();
+        log_token = malloc(TOKENSIZE);
+        strcpy(log_token,logdata->token);
         main_interface();
         gtk_widget_destroy(GTK_WIDGET(log_win));
+    }else{
+        
+          dailog_log_win("登录错误");
+    }
+    free(head_return);*/
+    /*-------------test-----测试程序：直接进入主界面-------------------*/
+
     /*-------------------------------------------*/
     
 }

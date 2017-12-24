@@ -65,14 +65,21 @@ void quit_alart_win()
 /*显示好友*/
 void display_friends()
 {
-   
+   struct HEAD_MAIN head_main;
+   head_main.mode = 1;
+   Send(sockfd, &head_main, sizeof(head_main),0);
+   gdk_threads_enter();
+   struct Head_DATA* senddata = data_showlist(log_token);
+   gdk_threads_leave();
+   Send(sockfd,senddata,sizeof(struct HEAD_DATA),0);
+   free(senddata);
     /*---test----测试程序：将小马，小王添加到好友列表（假设已经从服务器获取）-----------------------*/
-    char text_char[100] = "小马";
+   /* char text_char[100] = "小马";
     char text_char2[100] = "小王";
      gtk_tree_store_append(treestore, &child, &toplevel);
      gtk_tree_store_set(treestore, &child,COLUMN,text_char, -1);
      gtk_tree_store_append(treestore, &child, &toplevel);
-     gtk_tree_store_set(treestore, &child,COLUMN,text_char2, -1);
+     gtk_tree_store_set(treestore, &child,COLUMN,text_char2, -1);*/
      /*-----------------------------------*/
 
 }
@@ -407,7 +414,7 @@ void main_interface()
     GtkWidget *vPaned;
    // GtkWidget *sep;
     GtkWidget *add;
-    GtkWidget *group;
+    GtkWidget *refresh;
     GtkWidget *quit;
     GtkWidget *hbox;
     name = (gchar*)malloc(50);
@@ -474,16 +481,16 @@ void main_interface()
     hbox = gtk_hbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(vbox),hbox,FALSE,FALSE,0);
     add = gtk_button_new_with_label("添加好友");
-    group = gtk_button_new_with_label("群聊");
+    refresh = gtk_button_new_with_label("刷新好友");
     quit = gtk_button_new_with_label("退出");
     gtk_box_pack_start(GTK_BOX(hbox), add, TRUE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(hbox), group, TRUE, TRUE, 15);
+    gtk_box_pack_start(GTK_BOX(hbox), refresh, TRUE, TRUE, 15);
     gtk_box_pack_start(GTK_BOX(hbox), quit, TRUE, TRUE, 15);
 
     //pthread_create(&id,NULL,(void *)get_message,NULL);
     g_signal_connect(view_y, "row-activated", (GCallback) view_onRowActivated, NULL);
     g_signal_connect(G_OBJECT(window),"destroy",G_CALLBACK(quit_window),NULL);
-    //g_signal_connect(G_OBJECT(group),"clicked",G_CALLBACK(send_group_message_win),NULL);
+    g_signal_connect(G_OBJECT(refresh),"clicked",G_CALLBACK(display_friends),NULL);
     g_signal_connect(G_OBJECT(quit),"clicked",G_CALLBACK(quit_window),NULL);
     g_signal_connect(G_OBJECT(add),"clicked",G_CALLBACK(find_friends),NULL);
 
