@@ -5,6 +5,7 @@ test_hash
 ./server
 build/
 data/
+release/
 clientdata/
 test/
 client2
