@@ -125,20 +125,28 @@ _由于程序编写与设计时，两人分工不同，沟通不畅通，导致U
 
 #### 客户端到服务器
 
+- HEAD_USER 定义
+
 | HEAD_MAIN | HEAD_USER                                |
 | --------- | ---------------------------------------- |
 | char mode | char logmode; char username[16];char password[16];char nickname[16]; |
 | 1         | 49                                       |
+
+- HEAD_USER 具体
 
 |  discript  | HEAD_MAIN mode | HEAD_USER logmode | char username | char password | char nickname |
 | :--------: | -------------- | ----------------- | ------------- | ------------- | ------------- |
 | login（登录）  | 0              | 1                 | `username`    | `password`    | []            |
 | signup（注册） | 0              | 0                 | `username`    | `password`    | `nickname`    |
 
+- HEAD_MAIN 定义
+
 | HEAD_MAIN | HEAD_DATA                                |
 | --------- | ---------------------------------------- |
 | char mode | char token[44];char datamode;int datalen; |
 | 1         | 49                                       |
+
+- HEAD_MAIN 具体
 
 | discript                | HEAD_MAIN mode | token   | HEAD_DATA datamode | int datalen |
 | ----------------------- | -------------- | ------- | ------------------ | ----------- |
@@ -461,8 +469,6 @@ int sql_all(sqlite3* db,char*** data,int* row,int* col);
 
 *   to use sqlite3(for ubuntu)
 
-    ​
-
     ```bash
     sudo apt-get install sqlite3 
     sudo apt-get install libsqlite3-dev
@@ -553,21 +559,28 @@ make
 ### UI界面截图
 
 *   登录
-    ![](img/ui_login.png)
+
+![](img/ui_login.png)
 
 *   注册
-                      ![](img/ui_signup.png)
+
+![](img/ui_signup.png)
 
 *   添加好友
-                      ![](img/ui_addfriend.png)
 
-*   显示好友列表![](img/ui_showlist.png)
+![](img/ui_addfriend.png)
+
+*   显示好友列表
+
+![](img/ui_showlist.png)
 
 *   信息交互
-                      ![](img/ui_chat.png)
-                      ![](img/ui_chat2.png)
-                      ​              
+
+
+![](img/ui_chat.png)
+![](img/ui_chat2.png)
+
 ## 九. 附录
 
 **项目源代码及文件已托管到github：**
-**[QQsocket](https://github.com/lichunown/homework-QQsocket)**
+**[https://github.com/lichunown/homework-QQsocket](https://github.com/lichunown/homework-QQsocket)**
