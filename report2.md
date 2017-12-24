@@ -15,9 +15,9 @@
 
 ## 二、项目组人员及任务分工
 
-**王炳荃** ：UI界面设计与开发
+**王柄荃** ：UI界面设计与开发
 
-**韩慧** ：文档撰写与设计
+**韩慧** ：文档撰写与设计，框架设计
 
 **李春洋** ：服务器搭建及命令行模式客户端开发
 
@@ -400,7 +400,7 @@ char* ptoa(void* num);
 **可以使用`make test_mysring`测试**
 
 *   filetransport.c  文件传输功能的封装
-    ```c
+```c
 struct SEND_FILE* recv_sendfile_head(int sockfd);
 void mergeFiles(char* filename, unsigned int maxid, unsigned int perlength, unsigned long filelength);
 struct SEND_FILE* sendfile_head(char* filename, unsigned int id, unsigned int datalen, unsigned long filelength);
@@ -408,7 +408,6 @@ void client_sendfile(int sockfd,char* token,char* path,char* filename);
 int trave_dir(char* path, struct file_list** data);
 void client_startrecv_id(int sockfd,char* token, char* filename,int id,long filelength);
 void client_recvfile(int sockfd,char* path,char* token);
-
 ```
 
 *   encode.c   编码功能封装
@@ -419,7 +418,8 @@ void printAscii(char* data,int size);
 char* encodePassword(char* password); // TODO
 ```
 
-*   sql.c   数据库操做封装
+*   sql.c   数据库操作封装
+
 ```c
 int Sqlite3_open(char* name,sqlite3** db);// open database
 sqlite3* createDatabase(sqlite3* db);// create new database
@@ -428,40 +428,55 @@ int sql_createUser(sqlite3* db,char* username,char* password,char* nickname);
 int sql_login(sqlite3* db,char* username,char* password,char** gettingnick);
 int sql_changeNickname(sqlite3* db,char* username,char* newnickname);
 int sql_all(sqlite3* db,char*** data,int* row,int* col);
-// sql_all(db,NULL,NULL,NULL); auto printf database data;
-/*
-	-   sql_all(db,NULL,NULL,NULL);
-
-	-   char** data;
-		int row,col;
-		sql_all(db,&data,&row,&col);
-*/
+    // sql_all(db,NULL,NULL,NULL); auto printf database data;
+    /*
+    
+    -   sql_all(db,NULL,NULL,NULL);
+    
+    -   char** data;
+          int row,col;
+          sql_all(db,&data,&row,&col);
+          */
 ```
 
 ## 七．项目文件列表、文件功能说明及项目编译步骤
 
 ### 文件目录
 
-<table>
-<thead>
-<tr><th>文件</th><th>功能说明</th></tr></thead>
-<tbody><tr><td>[client.c](https://github.com/lichunown/homework-QQsocket/blob/master/client.c)</td><td>客户端主程序</td></tr><tr><td>[client_recv.c](https://github.com/lichunown/homework-QQsocket/blob/master/client_recv.c)</td><td>客户端接收功能的封装</td></tr><tr><td>[encode.c](https://github.com/lichunown/homework-QQsocket/blob/master/encode.c)</td><td>传输信息编码</td></tr><tr><td>[filetransport.c](https://github.com/lichunown/homework-QQsocket/blob/master/filetransport.c)</td><td>文件传输的函数封装</td></tr><tr><td>[g_hash_extend.c](https://github.com/lichunown/homework-QQsocket/blob/master/g_hash_extend.c)</td><td>扩展glib哈希表功能</td></tr><tr><td>[mysocket.c](https://github.com/lichunown/homework-QQsocket/blob/master/mysocket.c)</td><td>套接字封装</td></tr><tr><td>[mystring.c](https://github.com/lichunown/homework-QQsocket/blob/master/mystring.c)</td><td>字符串处理</td></tr><tr><td>[mystruct.c](https://github.com/lichunown/homework-QQsocket/blob/master/mystruct.c)</td><td>定义传输结构体</td></tr><tr><td>[server.c](https://github.com/lichunown/homework-QQsocket/blob/master/server.c)</td><td>服务器主程序</td></tr><tr><td>[sql.c](https://github.com/lichunown/homework-QQsocket/blob/master/sql.c)</td><td>数据库封装</td></tr><tr><td>test_*.c</td><td>测试单元功能</td></tr></tbody>
-</table>
+| 文件                                       | 功能说明        |
+| ---------------------------------------- | ----------- |
+| [client.c](https://github.com/lichunown/homework-QQsocket/blob/master/client.c) | 客户端主函数      |
+| [client_recv.c](https://github.com/lichunown/homework-QQsocket/blob/master/client_recv.c) | 客户端接收功能的封装  |
+| [encode.c](https://github.com/lichunown/homework-QQsocket/blob/master/encode.c) | 传输信息编码      |
+| [filetransport.c](https://github.com/lichunown/homework-QQsocket/blob/master/filetransport.c) | 文件传输        |
+| [g_hash_extend.c](https://github.com/lichunown/homework-QQsocket/blob/master/g_hash_extend.c) | 扩展glib哈希表功能 |
+| [mysocket.c](https://github.com/lichunown/homework-QQsocket/blob/master/mysocket.c) | 套接字封装       |
+| [mystring.c](https://github.com/lichunown/homework-QQsocket/blob/master/mystring.c) | 字符串处理       |
+| [mystruct.c](https://github.com/lichunown/homework-QQsocket/blob/master/mystruct.c) | 定义传输结构体     |
+| [server.c](https://github.com/lichunown/homework-QQsocket/blob/master/server.c) | 服务器主函数      |
+| [sql.c](https://github.com/lichunown/homework-QQsocket/blob/master/sql.c) | 数据库封装       |
+| test_*.c                                 | 测试单元功能      |
 
 ### 编译步骤
 
 *   to use sqlite3(for ubuntu)
-    <pre lang='bash'>
+
+    ​
+
+    ```bash
     sudo apt-get install sqlite3 
     sudo apt-get install libsqlite3-dev
-    </pre>
+    ```
 
 *   use glib
-      (glib download)[[http://ftp.acc.umu.se/pub/GNOME/sources/glib/2.54/](http://ftp.acc.umu.se/pub/GNOME/sources/glib/2.54/)]
-      <pre lang='undefined'>
-      wget http://ftp.gnome.org/pub/gnome/sources/glib/2.54/glib-2.54.2.tar.xz
-      tar -xvJf ./glib-2.54.2.tar.xz
-      cd ./glib-2.54.2.tar.xz
+```bash
+
+(glib download)[[http://ftp.acc.umu.se/pub/GNOME/sources/glib/2.54/](http://ftp.acc.umu.se/pub/GNOME/sources/glib/2.54/)]
+
+​```bash
+wget http://ftp.gnome.org/pub/gnome/sources/glib/2.54/glib-2.54.2.tar.xz
+tar -xvJf ./glib-2.54.2.tar.xz
+cd ./glib-2.54.2.tar.xz
 
 sudo apt-get install gcc
 sudo apt-get install zlib1g-dev
@@ -473,45 +488,46 @@ sudo apt-get install libpcre3-dev
 
 make
 make install
-
 # show the gcc option 
 pkg-config glib-2.0 --libs
 
 sudo cp -r /usr/local/include/glib-2.0/* /usr/include/  
 sudo cp /usr/local/lib/glib-2.0/include/glibconfig.h /usr/include/
-</pre>
+```
 
 or      [Linux下静态编译glib](https://www.cnblogs.com/tiantao/archive/2012/04/23/2466942.html)
 
-<pre lang='undefined'>
+```bash
 ./configure --prefix=/usr/local/glib --enable-static --disable-shared CFLAGS=&quot;-static&quot;
-</pre>
+```
 
 [ubuntu完整安装glib心得](http://blog.csdn.net/andylauren/article/details/51346388)
 
 *   build test
-    <pre lang='bash'>
-    make test
-    </pre>
+
+```bash
+make test
+```
 
 *   build server
-      <pre lang='bash'>
-      make 
-      </pre>
+```bash
+make 
+```
 
 *   build all
-      <pre lang='bash'>
-      make all
-      </pre>
+```bash
+ make all
+```
 
 *   运行
-      <pre lang='bash'>
-      ./server 8001 # 可以不输入端口号，默认8001
+```bash
+./server 8001 # 可以不输入端口号，默认8001
+              
 # another shell
 ./client.out 0.0.0.0 8001 # 两个参数分别为连接的IP 和端口号
-</pre>
+```
 
-## 七．项目演示步骤
+## 八．项目演示步骤
 
 ### 命令行下客户端截图
 
@@ -540,18 +556,18 @@ or      [Linux下静态编译glib](https://www.cnblogs.com/tiantao/archive/2012/
     ![](img/ui_login.png)
 
 *   注册
-      ![](img/ui_signup.png)
+                      ![](img/ui_signup.png)
 
 *   添加好友
-      ![](img/ui_addfriend.png)
+                      ![](img/ui_addfriend.png)
 
 *   显示好友列表![](img/ui_showlist.png)
 
 *   信息交互
-      ![](img/ui_chat.png)
-      ![](img/ui_chat2.png)
+                      ![](img/ui_chat.png)
+                      ![](img/ui_chat2.png)
+                      ​              
+## 九. 附录
 
-        ## 附录
-
-        **项目源代码及文件已托管到github：**
-      **[QQsocket](https://github.com/lichunown/homework-QQsocket)**
+**项目源代码及文件已托管到github：**
+**[QQsocket](https://github.com/lichunown/homework-QQsocket)**
